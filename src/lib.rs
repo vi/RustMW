@@ -28,22 +28,25 @@ const fn sprite8x8(x: &'static str) -> [u8; 8] {
     buf
 }
 
-const SMILEY: [u8; 8] = sprite8x8("
-    . . X X X X . .
-    . X X X X X X .
-    X X . X X . X X
-    X X . X X . X X
-    X X X X X X X X
-    X X . X X . X X
-    . X X . . X X .
-    . . X X X X . .
+const WHEEL1: [u8; 8] = sprite8x8("
+    . X . . X . . .
+    . . X X X X . X
+    . X . . . . X .
+    X X . . . . X .
+    . X . . . . X X
+    . X . . . . X .
+    X . X X X X . .
+    . . . X . . X .
 ");
+
+
 
 struct State {
     x: u8,
     y: u8,
     c: u8,
     prevpad: u8,
+    frame: u8,
 }
 
 impl State {
@@ -53,6 +56,7 @@ impl State {
             y: 76,
             c: 2,
             prevpad: 0,
+            frame: 0,
         }
     }
 
@@ -77,10 +81,12 @@ impl State {
         if gamepad & BUTTON_UP != 0 { self.y -= 1; }
         if gamepad & BUTTON_DOWN != 0 { self.y += 1; }
     
-        blit(&SMILEY, self.x.into(), self.y.into(), 8, 8, BLIT_1BPP);
+        let bf = if self.frame & 0x1F < 16 { 0 } else { BLIT_FLIP_X };
+        blit(&WHEEL1, self.x.into(), self.y.into(), 8, 8, BLIT_1BPP | bf);
         text("Press X to blink", 16, 90);
 
         self.prevpad = gamepad;
+        self.frame = self.frame.wrapping_add(1);
     }
 }
 
