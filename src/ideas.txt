@@ -11,6 +11,7 @@ Items grant features.
 * async runtime - execute all planned actions simultaneously
 * clippy - show hints and/or secret areas
 * macros - fast travel between areas by "recording and replaying" moves
+* no_std - smaller collision radius
 
 More actions and action combinators allow more movement freedom and access to more areas. There is tuning menu to input sequence of things.
 

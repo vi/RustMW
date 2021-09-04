@@ -95,7 +95,7 @@ impl Player {
 
     }
     fn repel_point(&mut self, p : cf32) {
-        let v =  self.pos - p;
+        let mut v =  self.pos - p;
         let vn = v.norm();
         
         /*
@@ -111,9 +111,11 @@ impl Player {
         );
         */
 
-        if vn < 5.0 {
-            self.vel -= self.vel * 1.0 / vn;
-            self.vel += 60.0 * v.unscale(vn*vn*vn);
+        if vn < 7.0 {
+            v = v.unscale(vn);
+            //self.vel -= self.vel * 1.0 / vn;
+            let scale = if vn <= 6.0 { 60.0 } else { 60.0 / (vn - 5.0) };
+            self.vel += v.scale(scale);
         }
     }
     fn handle_collisions(&mut self, r: &Room) {
@@ -129,9 +131,9 @@ impl Player {
             self.repel_point(self.from_world_coords((x, y-1))+ cf32::new(4.0, 4.0));
         }
         if y > 0 && r.get_tile(x+1, y-1) != 0 {
-            self.repel_point(self.from_world_coords((x+1, y-1))+ cf32::new(-2.0, 4.0));
-            self.repel_point(self.from_world_coords((x+1, y-1))+ cf32::new(-4.0, 2.0));
-            self.repel_point(self.from_world_coords((x+1, y-1))+ cf32::new(-4.0, 4.0));
+            self.repel_point(self.from_world_coords((x+1, y-1))+ cf32::new(-1.0, 4.0));
+            self.repel_point(self.from_world_coords((x+1, y-1))+ cf32::new(-3.0, 2.0));
+            self.repel_point(self.from_world_coords((x+1, y-1))+ cf32::new(-3.0, 4.0));
         }
 
         if x > 0 && r.get_tile(x-1, y) != 0 {
@@ -140,9 +142,9 @@ impl Player {
             self.repel_point(self.from_world_coords((x-1, y))+ cf32::new( 4.0, 4.0));
         }
         if  r.get_tile(x+1, y) != 0 {
-            self.repel_point(self.from_world_coords((x+1, y))+ cf32::new( -3.0, -4.0));
-            self.repel_point(self.from_world_coords((x+1, y))+ cf32::new( -3.0, 0.0));
-            self.repel_point(self.from_world_coords((x+1, y))+ cf32::new( -3.0, 4.0));
+            self.repel_point(self.from_world_coords((x+1, y))+ cf32::new( -2.0, -4.0));
+            self.repel_point(self.from_world_coords((x+1, y))+ cf32::new( -2.0, 0.0));
+            self.repel_point(self.from_world_coords((x+1, y))+ cf32::new( -2.0, 4.0));
         }
 
 
@@ -157,14 +159,16 @@ impl Player {
             self.repel_point(self.from_world_coords((x, y+1))+ cf32::new(4.0, -2.0));
         }
         if r.get_tile(x+1, y+1) != 0 {
-            self.repel_point(self.from_world_coords((x+1, y+1))+ cf32::new(-2.0, -2.0));
-            self.repel_point(self.from_world_coords((x+1, y+1))+ cf32::new(-4.0,  -0.0));
-            self.repel_point(self.from_world_coords((x+1, y+1))+ cf32::new(-4.0, -2.0));
+            self.repel_point(self.from_world_coords((x+1, y+1))+ cf32::new(-1.0, -2.0));
+            self.repel_point(self.from_world_coords((x+1, y+1))+ cf32::new(-3.0,  -0.0));
+            self.repel_point(self.from_world_coords((x+1, y+1))+ cf32::new(-3.0, -2.0));
         }
     }
     fn movement(&mut self) {
-        self.pos += self.vel / 200.0;
-        self.vel -= self.vel / 200.0;
+        self.vel += cf32::new(0.0, 0.1);
+
+        self.pos += self.vel / 2000.0;
+        self.vel -= self.vel / 2000.0;
         
         if self.pos.re < 4.0 {
             self.pos.re = 4.0;
@@ -305,8 +309,12 @@ impl State {
 
         let gamepad = unsafe { *GAMEPAD1 };
         self.player.control(self.prevpad, gamepad);
-        self.player.handle_collisions(&self.room);
-        self.player.movement();
+
+        for _ in 0..10 {
+            self.player.handle_collisions(&self.room);
+            self.player.movement();
+        }
+
         self.textbox.control(self.prevpad, gamepad);
 
         self.room.draw(self.frame, self.player.my_world_coords());
