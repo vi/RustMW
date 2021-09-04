@@ -5,6 +5,8 @@ pub mod utils;
 
 use utils::{draw_colours, sprite8x8, room16x16,  UfmtBuf};
 
+use num_complex::Complex32 as cf32;
+
 const WHEEL: [u8; 8] = sprite8x8(
     "
     . X . . X . . .
@@ -43,39 +45,69 @@ const MAP: [u32; 16] = room16x16( "
 ");
 
 struct Player {
-    x: u8,
-    y: u8,
+    pos: cf32,
+    vel: cf32,
     anim_timer: std::num::Wrapping<u8>,
+
+    power: f32,
 }
 
 impl Player {
     const fn new() -> Player {
         Player {
-            x: 70,
-            y: 70,
+            pos: cf32::new(70.0, 70.0),
+            vel: cf32::new(0.0, 0.0),
+            power: 50.0,
             anim_timer: std::num::Wrapping(0),
         }
     }
     fn control(&mut self, _prev: u8, cur: u8) {
-        let mut do_move = false;
+        let mut dir = cf32::new(0.0, 0.0);
+
         if cur & BUTTON_LEFT != 0 {
-            self.x -= 1;
-            do_move = true;
+            dir.re -= 1.0;
         }
         if cur & BUTTON_RIGHT != 0 {
-            self.x += 1;
-            do_move = true;
+            dir.re += 1.0;
         }
         if cur & BUTTON_UP != 0 {
-            self.y -= 1;
-            do_move = true;
+            dir.im -= 1.0;
         }
         if cur & BUTTON_DOWN != 0 {
-            self.y += 1;
-            do_move = true;
+            dir.im += 1.0;
         }
-        if do_move {
+
+        let dirnorm = dir.norm();
+        if dirnorm > 0.5 {
             self.anim_timer += std::num::Wrapping(1);
+
+            // from 0.5 to 2.2 KiB to wasm size just for this line
+            dir = dir.unscale(dirnorm);
+
+            self.vel += dir * self.power / 20.0;
+            self.power -= self.power / 20.0;
+        }
+
+        self.power += (200.0-self.power)/100.0;
+
+        self.pos += self.vel / 40.0;
+        self.vel -= self.vel / 40.0;
+        
+        if self.pos.re < 4.0 {
+            self.pos.re = 4.0;
+            if self.vel.re < 0.0 { self.vel.re = 0.0; }
+        }
+        if self.pos.re > 1.0*SCREEN_SIZE as f32 - 10.0 {
+            self.pos.re = 1.0*SCREEN_SIZE as f32- 10.0;
+            if self.vel.re > 0.0 { self.vel.re = 0.0; }
+        }
+        if self.pos.im < 4.0 {
+            self.pos.im = 4.0;
+            if self.vel.im < 0.0 { self.vel.im = 0.0; }
+        }
+        if self.pos.im > 1.0*SCREEN_SIZE as f32 - 10.0 {
+            self.pos.im  = 1.0*SCREEN_SIZE as f32 - 10.0;
+            if self.vel.im > 0.0 { self.vel.im = 0.0; }
         }
     }
     fn draw(&self, _global_frame: u8) {
@@ -85,7 +117,7 @@ impl Player {
         } else {
             BLIT_FLIP_X
         };
-        blit(&WHEEL, self.x.into(), self.y.into(), 8, 8, BLIT_1BPP | bf);
+        blit(&WHEEL, self.pos.re as i32, self.pos.im as i32, 8, 8, BLIT_1BPP | bf);
     }
 }
 

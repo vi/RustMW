@@ -8,6 +8,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 nonmax = "0.5.0"
+num-complex = "0.4.0"
 ufmt = "0.1.0"
 wee_alloc = { version = "0.4.5" }
 
