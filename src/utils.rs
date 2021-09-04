@@ -120,6 +120,7 @@ impl<const N:usize> UfmtBuf<N> {
         }
     }
     pub fn as_str(&self) -> &str {
+        //std::hint::black_box( [0u8; 33]);
         unsafe{std::str::from_utf8_unchecked(std::slice::from_raw_parts(self.buf.as_ptr(), self.cursor as usize))}
     }
 }
@@ -146,14 +147,13 @@ impl<const N:usize> ufmt::uWrite for UfmtBuf<N> {
 macro_rules! traceln {
     ($fmt:literal, $($args:tt)*) => {
         {
-            let mut buf = UfmtBuf::<64>::new();
+            let mut buf = UfmtBuf::<30>::new();
             let _ = ::ufmt::uwrite!(
                 buf,
                 $fmt,
                 $($args)*
             );
             trace(buf.as_str());
-
         }
     }
 }

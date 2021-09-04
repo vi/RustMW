@@ -111,14 +111,24 @@ impl Player {
         );
         */
 
-        if vn < 7.0 {
+        let radius = 5.0;
+
+        if vn < radius+2.0 {
             v = v.unscale(vn);
-            //self.vel -= self.vel * 1.0 / vn;
-            let scale = if vn <= 6.0 { 60.0 } else { 60.0 / (vn - 5.0) };
+            let veldir = self.vel.unscale(self.vel.norm());
+            let accelerating = (veldir / v).re;
+            //traceln!("accel {}", (accelerating*100.0) as i32);
+            let mut scale = if vn <= 5.0 { 1.0 } else { 0.5 * (vn - radius)  };
+            if accelerating > 0.0 {
+                scale *= 0.1;
+            } 
+            scale *= 10.0;
             self.vel += v.scale(scale);
         }
     }
     fn handle_collisions(&mut self, r: &Room) {
+        //self.repel_point(cf32::new(70.0, 100.0));
+        //return;
         let (x,y) = self.my_world_coords();
         if x > 0 && y > 0 && r.get_tile(x-1, y-1) != 0 {
             self.repel_point(self.from_world_coords((x-1, y-1))+ cf32::new(2.0, 4.0));
