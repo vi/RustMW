@@ -109,7 +109,7 @@ pub fn draw_colours(c0: u8, c1: u8, c2: u8, c3: u8) {
 }
 
 pub struct UfmtBuf<const N: usize> {
-    cursor: u8,
+    cursor: u16,
     buf: [u8; N],
 }
 impl<const N:usize> UfmtBuf<N> {
@@ -120,7 +120,7 @@ impl<const N:usize> UfmtBuf<N> {
         }
     }
     pub fn as_str(&self) -> &str {
-        unsafe{std::str::from_utf8_unchecked(&self.buf[0..(self.cursor as usize)])}
+        unsafe{std::str::from_utf8_unchecked(std::slice::from_raw_parts(self.buf.as_ptr(), self.cursor as usize))}
     }
 }
 impl<const N:usize> ufmt::uWrite for UfmtBuf<N> {
@@ -137,7 +137,23 @@ impl<const N:usize> ufmt::uWrite for UfmtBuf<N> {
             std::ptr::copy_nonoverlapping(s.as_bytes().as_ptr(), self.buf.as_mut_ptr().offset(self.cursor as isize), s.as_bytes().len());
         }
 
-        self.cursor += s.as_bytes().len() as u8;
+        self.cursor += s.as_bytes().len() as u16;
         Ok(())
+    }
+}
+
+#[macro_export]
+macro_rules! traceln {
+    ($fmt:literal, $($args:tt)*) => {
+        {
+            let mut buf = UfmtBuf::<64>::new();
+            let _ = ::ufmt::uwrite!(
+                buf,
+                $fmt,
+                $($args)*
+            );
+            trace(buf.as_str());
+
+        }
     }
 }

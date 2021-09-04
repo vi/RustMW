@@ -4,6 +4,7 @@ use wasm4::*;
 pub mod utils;
 
 use utils::{draw_colours, sprite8x8, room16x16,  UfmtBuf};
+use ufmt::uwrite;
 
 use num_complex::Complex32 as cf32;
 
@@ -33,11 +34,13 @@ const SOLIDTILE: [u8; 8] = sprite8x8(
 ",
 );
 
-const MAP: [u32; 16] = room16x16( "
-   |  ```           |
+type RoomData = [u32; 16];
+
+const MAP: RoomData = room16x16( "
+   |` ```           |
    |        `       |
-   |           ,    |
-   |                |
+   |XXXX       ,    |
+   |XXXX            |
    |X              X|
    |X   ,``  `,    X|
    |X ,`           X|
@@ -90,8 +93,78 @@ impl Player {
 
         self.power += (200.0-self.power)/100.0;
 
-        self.pos += self.vel / 40.0;
-        self.vel -= self.vel / 40.0;
+    }
+    fn repel_point(&mut self, p : cf32) {
+        let v =  self.pos - p;
+        let vn = v.norm();
+        
+        /*
+        traceln!(
+            "repel {} {}   {} {}   {} {} n={}",
+            (self.pos.re * 10.0) as i32,
+            (self.pos.im * 10.0) as i32,
+            (p.re * 10.0) as i32,
+            (p.im * 10.0) as i32,
+            (v.re * 10.0) as i32,
+            (v.im * 10.0) as i32,
+            (   vn * 10.0) as i32
+        );
+        */
+
+        if vn < 5.0 {
+            self.vel -= self.vel * 1.0 / vn;
+            self.vel += 60.0 * v.unscale(vn*vn*vn);
+        }
+    }
+    fn handle_collisions(&mut self, r: &Room) {
+        let (x,y) = self.my_world_coords();
+        if x > 0 && y > 0 && r.get_tile(x-1, y-1) != 0 {
+            self.repel_point(self.from_world_coords((x-1, y-1))+ cf32::new(2.0, 4.0));
+            self.repel_point(self.from_world_coords((x-1, y-1))+ cf32::new(4.0, 2.0));
+            self.repel_point(self.from_world_coords((x-1, y-1))+ cf32::new(4.0, 4.0));
+        }
+        if y > 0 && r.get_tile(x, y-1) != 0 {
+            self.repel_point(self.from_world_coords((x, y-1))+ cf32::new(-4.0, 4.0));
+            self.repel_point(self.from_world_coords((x, y-1))+ cf32::new(0.0, 4.0));
+            self.repel_point(self.from_world_coords((x, y-1))+ cf32::new(4.0, 4.0));
+        }
+        if y > 0 && r.get_tile(x+1, y-1) != 0 {
+            self.repel_point(self.from_world_coords((x+1, y-1))+ cf32::new(-2.0, 4.0));
+            self.repel_point(self.from_world_coords((x+1, y-1))+ cf32::new(-4.0, 2.0));
+            self.repel_point(self.from_world_coords((x+1, y-1))+ cf32::new(-4.0, 4.0));
+        }
+
+        if x > 0 && r.get_tile(x-1, y) != 0 {
+            self.repel_point(self.from_world_coords((x-1, y))+ cf32::new( 4.0, -4.0));
+            self.repel_point(self.from_world_coords((x-1, y))+ cf32::new( 4.0, 0.0));
+            self.repel_point(self.from_world_coords((x-1, y))+ cf32::new( 4.0, 4.0));
+        }
+        if  r.get_tile(x+1, y) != 0 {
+            self.repel_point(self.from_world_coords((x+1, y))+ cf32::new( -3.0, -4.0));
+            self.repel_point(self.from_world_coords((x+1, y))+ cf32::new( -3.0, 0.0));
+            self.repel_point(self.from_world_coords((x+1, y))+ cf32::new( -3.0, 4.0));
+        }
+
+
+        if x > 0 && r.get_tile(x-1, y+1) != 0 {
+            self.repel_point(self.from_world_coords((x-1, y+1))+ cf32::new(2.0, -2.0));
+            self.repel_point(self.from_world_coords((x-1, y+1))+ cf32::new(4.0, -0.0));
+            self.repel_point(self.from_world_coords((x-1, y+1))+ cf32::new(4.0, -2.0));
+        }
+        if r.get_tile(x, y+1) != 0 {
+            self.repel_point(self.from_world_coords((x, y+1))+ cf32::new(-4.0, -2.0));
+            self.repel_point(self.from_world_coords((x, y+1))+ cf32::new(0.0, -2.0));
+            self.repel_point(self.from_world_coords((x, y+1))+ cf32::new(4.0, -2.0));
+        }
+        if r.get_tile(x+1, y+1) != 0 {
+            self.repel_point(self.from_world_coords((x+1, y+1))+ cf32::new(-2.0, -2.0));
+            self.repel_point(self.from_world_coords((x+1, y+1))+ cf32::new(-4.0,  -0.0));
+            self.repel_point(self.from_world_coords((x+1, y+1))+ cf32::new(-4.0, -2.0));
+        }
+    }
+    fn movement(&mut self) {
+        self.pos += self.vel / 200.0;
+        self.vel -= self.vel / 200.0;
         
         if self.pos.re < 4.0 {
             self.pos.re = 4.0;
@@ -117,7 +190,31 @@ impl Player {
         } else {
             BLIT_FLIP_X
         };
-        blit(&WHEEL, self.pos.re as i32, self.pos.im as i32, 8, 8, BLIT_1BPP | bf);
+        blit(&WHEEL, self.pos.re as i32 - 4, self.pos.im as i32 - 4, 8, 8, BLIT_1BPP | bf);
+    }
+
+    fn my_world_coords(&self) -> (u16, u16) {
+        let x = match self.pos.re {
+            t if t <= 24.0 => 0,
+            t if t >= 24.0 + 16.0*8.0 => 15,
+            t => {
+                ((t - 20.0) / 8.0) as u16
+            }
+        };
+        let y = match self.pos.im {
+            t if t <= 24.0 => 0,
+            t if t >= 24.0 + 16.0*8.0 => 15,
+            t => {
+                ((t - 20.0) / 8.0) as u16
+            }
+        };
+        (x,y)
+    }
+    fn from_world_coords(&self, (x,y): (u16, u16)) -> cf32 {
+        cf32::new(
+            8.0 * x as f32 + 24.0,
+            8.0 * y as f32 + 24.0,
+        )
     }
 }
 
@@ -142,7 +239,7 @@ impl TextBox {
     fn draw(&self, _global_frame: u8) {
         draw_colours(self.c, 0, 0, 0);
         let mut buf = UfmtBuf::<11>::new();
-        let _ = ufmt::uwrite!(buf, "{}", 33);
+        let _ = uwrite!(buf, "{}", 33);
         text(buf.as_str(), 10, 10);
     }
 }
@@ -157,15 +254,26 @@ impl Room {
         }
     }
 
-    fn draw(&self, _global_frame: u8) {
-        draw_colours(2, 0, 0, 0);
+    fn draw(&self, _global_frame: u8, _player_coords:(u16,u16)) {
         for y in 0..16 {
             for x in 0..16 {
-                if (MAP[y as usize] >> (x*2)) & 0b11 != 0 {
-                    blit(&SOLIDTILE, 20+8*x, 20+8*y, 8, 8, 0);
+                if self.get_tile(x,y) != 0 {
+                    let mut col = 2;
+                    if (_player_coords.0 as i32 - x as i32).abs() <= 1 && (_player_coords.1 as i32 - y as i32).abs() <= 1  {
+                        col = 4;
+                    }
+                    draw_colours(col, 0, 0, 0);
+                    blit(&SOLIDTILE, 20+8*x as i32, 20+8*y as i32, 8, 8, 0);
                 }
             }
         }
+    }
+
+    fn get_tile(&self, x: u16, y: u16) -> u8 {
+        if x >= 16 || y >= 16 {
+            return 0;
+        }
+        ((MAP[y as usize] >> (x as usize*2)) & 0b11) as u8
     }
 }
 
@@ -197,9 +305,11 @@ impl State {
 
         let gamepad = unsafe { *GAMEPAD1 };
         self.player.control(self.prevpad, gamepad);
+        self.player.handle_collisions(&self.room);
+        self.player.movement();
         self.textbox.control(self.prevpad, gamepad);
 
-        self.room.draw(self.frame);
+        self.room.draw(self.frame, self.player.my_world_coords());
         self.player.draw(self.frame);
         self.textbox.draw(self.frame);
 
