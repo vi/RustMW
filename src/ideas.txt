@@ -1,0 +1,21 @@
+A Metroidvania game with Rust language features, details and history-based collectible items.
+Items grant features.
+
+* `<<`, `>>`, `^` - dash in the direction pointed by arrow.
+* `sleep` - wait to fall down, instead of the downwards dash
+* struct - allow to combine two special actions sequentially
+* array - allow to repeat action multipe times, up to 32 initially
+* enum - allow to mix and match array actions
+* union - allow to make actions simultaneous
+* async/await - plan action
+* async runtime - execute all planned actions simultaneously
+* clippy - show hints and/or secret areas
+* macros - fast travel between areas by "recording and replaying" moves
+
+More actions and action combinators allow more movement freedom and access to more areas. There is tuning menu to input sequence of things.
+
+Ultimate, last action:
+
+* `unsafe` - allow access to restricted areas and activate noclip.
+
+May trigger Undefined Behaviour mode (e.g. by staying in Unsafe mode too long), implemented as actual chaotic actions within WebAssembly memory, biased towards glitching specifically graphics and sounds.
