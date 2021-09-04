@@ -1,10 +1,9 @@
 mod wasm4;
 use wasm4::*;
 
-
 pub mod utils;
 
-use utils::{sprite8x8, draw_colours, UfmtBuf};
+use utils::{draw_colours, sprite8x8, room16x16,  UfmtBuf};
 
 const WHEEL: [u8; 8] = sprite8x8(
     "
@@ -19,9 +18,29 @@ const WHEEL: [u8; 8] = sprite8x8(
 ",
 );
 
-const SPRITES: [[u8; 8]; 1] = [WHEEL];
+const SOLIDTILE: [u8; 8] = sprite8x8(
+    "
+    . X . X . X . X
+    X . X . X . X .
+    . X . X . X . X
+    X . X . X . X .
+    . X . X . X . X
+    X . X . X . X .
+    . X . X . X . X
+    X . X . X . X .
+",
+);
 
-
+const MAP: [u32; 16] = room16x16( "
+   |  ```           |
+   |        `       |
+   |           ,    |
+   |                |
+   |X              X|
+   |X   ,``  `,    X|
+   |X ,`           X|
+   |XXXXXXXXXXXXXXXX|
+");
 
 struct Player {
     x: u8,
@@ -56,11 +75,11 @@ impl Player {
             do_move = true;
         }
         if do_move {
-            self.anim_timer += std::num::Wrapping(1);   
+            self.anim_timer += std::num::Wrapping(1);
         }
     }
     fn draw(&self, _global_frame: u8) {
-        draw_colours(3,0,0,0);
+        draw_colours(3, 0, 0, 0);
         let bf = if self.anim_timer.0 & 0x1F < 16 {
             0
         } else {
@@ -76,9 +95,7 @@ struct TextBox {
 
 impl TextBox {
     const fn new() -> TextBox {
-        TextBox {
-            c: 2,
-        }
+        TextBox { c: 2 }
     }
 
     fn control(&mut self, prev: u8, cur: u8) {
@@ -91,10 +108,32 @@ impl TextBox {
     }
 
     fn draw(&self, _global_frame: u8) {
-        draw_colours(self.c,0,0,0);
+        draw_colours(self.c, 0, 0, 0);
         let mut buf = UfmtBuf::<11>::new();
         let _ = ufmt::uwrite!(buf, "{}", 33);
         text(buf.as_str(), 10, 10);
+    }
+}
+
+struct Room {   
+}
+
+impl Room {
+    const fn new() -> Self {
+        Self {
+
+        }
+    }
+
+    fn draw(&self, _global_frame: u8) {
+        draw_colours(2, 0, 0, 0);
+        for y in 0..16 {
+            for x in 0..16 {
+                if (MAP[y as usize] >> (x*2)) & 0b11 != 0 {
+                    blit(&SOLIDTILE, 20+8*x, 20+8*y, 8, 8, 0);
+                }
+            }
+        }
     }
 }
 
@@ -104,6 +143,8 @@ struct State {
 
     player: Player,
     textbox: TextBox,
+
+    room: Room,
 }
 
 impl State {
@@ -113,6 +154,7 @@ impl State {
             frame: 0,
             player: Player::new(),
             textbox: TextBox::new(),
+            room: Room::new(),
         }
     }
 
@@ -125,7 +167,7 @@ impl State {
         self.player.control(self.prevpad, gamepad);
         self.textbox.control(self.prevpad, gamepad);
 
-        
+        self.room.draw(self.frame);
         self.player.draw(self.frame);
         self.textbox.draw(self.frame);
 

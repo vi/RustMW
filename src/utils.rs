@@ -1,12 +1,12 @@
 
 pub const fn sprite8x8(x: &'static str) -> [u8; 8] {
     let mut buf = [0u8; 8];
-    let x = x.as_bytes();
+    let s = x.as_bytes();
     let mut byteidx = 0;
     let mut bitidx = 0;
     let mut i = 0;
-    while i < x.len() {
-        let chr = x[i];
+    while i < s.len() {
+        let chr = s[i];
         match chr {
             b'X' => {
                 bitidx += 1;
@@ -26,7 +26,75 @@ pub const fn sprite8x8(x: &'static str) -> [u8; 8] {
     buf
 }
 
+pub const fn room16x16(s: &'static str) -> [u32; 16] {
+    let mut buf = [0u32; 16];
 
+    let s = s.as_bytes();
+    let mut lineidx = 0;
+    let mut cellidx = 0;
+    let mut within_room_area = false;
+
+    let mut i = 0;
+    while i < s.len() {
+        let chr = s[i];
+        match chr {
+            b'|' => {
+                within_room_area = !within_room_area;
+
+                if within_room_area {
+                    // began the line
+                    if lineidx >= 8 {
+                        b"There must by exactly 8 lines in each room"[999];
+                    }
+                } else {
+                    // finished the line
+                    if cellidx != 16 {
+                        b"Each line of the room but by eactly 16 characters long"[999];
+                    }
+                    cellidx = 0;
+                    lineidx += 1;
+                }
+            }
+            _ if within_room_area => {
+                if cellidx >= 16 {
+                    b"Each line of the room but by eactly 16 characters long"[999];
+                }
+                match chr {
+                    b' ' => {
+                        buf[2*lineidx+0] |= 0b00 << (cellidx*2);
+                        buf[2*lineidx+1] |= 0b00 << (cellidx*2);
+                    }
+                    b'`' => {
+                        buf[2*lineidx+0] |= 0b01 << (cellidx*2);
+                        buf[2*lineidx+1] |= 0b00 << (cellidx*2);
+                    }
+                    b',' => {
+                        buf[2*lineidx+0] |= 0b00 << (cellidx*2);
+                        buf[2*lineidx+1] |= 0b01 << (cellidx*2);
+                    }
+                    b'X' => {
+                        buf[2*lineidx+0] |= 0b01 << (cellidx*2);
+                        buf[2*lineidx+1] |= 0b01 << (cellidx*2);
+                    }
+                    _ => {
+                        b"Undefined character encountered within the room area"[999];
+                    }
+                }
+                cellidx+=1;
+            }
+            _ => (),
+        }
+        i += 1;
+    }  
+    if lineidx != 8 {
+        b"There must by exactly 8 lines in each room"[999];
+    }
+
+    buf
+}
+
+
+#[inline]
 pub fn draw_colours(c0: u8, c1: u8, c2: u8, c3: u8) {
     unsafe {
         *crate::wasm4::DRAW_COLORS = 
