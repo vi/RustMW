@@ -113,16 +113,17 @@ impl Player {
 
         let radius = 5.0;
 
-        if vn < radius+2.0 {
+        if vn < radius+3.0 {
             v = v.unscale(vn);
             let veldir = self.vel.unscale(self.vel.norm());
             let accelerating = (veldir / v).re;
             //traceln!("accel {}", (accelerating*100.0) as i32);
-            let mut scale = if vn <= 5.0 { 1.0 } else { 0.5 * (vn - radius)  };
-            if accelerating > 0.0 {
-                scale *= 0.1;
+            let fade = 1.0 - (vn - radius)/3.0;
+            //traceln!("fade {}", (fade*100.0) as i32);
+            let mut scale = if vn <= 5.0 { 1.0 } else { fade * fade  };
+            if accelerating < 0.0 {
+                scale *= 10.0;
             } 
-            scale *= 10.0;
             self.vel += v.scale(scale);
         }
     }
