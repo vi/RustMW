@@ -53,6 +53,8 @@ struct Player {
     anim_timer: std::num::Wrapping<u8>,
 
     power: f32,
+    jump_dir: Option<f32>,
+    grounded: bool,
 }
 
 impl Player {
@@ -62,37 +64,91 @@ impl Player {
             vel: cf32::new(0.0, 0.0),
             power: 50.0,
             anim_timer: std::num::Wrapping(0),
+            grounded: false,
+            jump_dir: None,
         }
     }
-    fn control(&mut self, _prev: u8, cur: u8) {
+    fn jump_strength(cur: u8) -> f32 {
+        let (down,up) = (cur & BUTTON_DOWN != 0, cur & BUTTON_UP != 0);
+        let strength = match (down,up) {
+            (true, false) => 0.7,
+            (true, true) => 0.85,
+            (false, false) => 0.9,
+            (false, true) => 1.0,
+        };
+        strength
+    }
+    fn control(&mut self, prev: u8, cur: u8) {
         let mut dir = cf32::new(0.0, 0.0);
+        let mut movpower : f32 = 0.0;
 
-        if cur & BUTTON_LEFT != 0 {
-            dir.re -= 1.0;
-        }
-        if cur & BUTTON_RIGHT != 0 {
-            dir.re += 1.0;
-        }
-        if cur & BUTTON_UP != 0 {
-            dir.im -= 1.0;
-        }
-        if cur & BUTTON_DOWN != 0 {
-            dir.im += 1.0;
+        if self.grounded && prev & BUTTON_2 != 0 {
+            self.jump_dir = Some(self.jump_dir.unwrap_or_default());
+            let jump_dir = self.jump_dir.as_mut().unwrap();
+            if cur & BUTTON_2 != 0 {
+                if cur & BUTTON_LEFT != 0 {
+                    *jump_dir -= 0.02;
+                }
+                if cur & BUTTON_RIGHT != 0 {
+                    *jump_dir += 0.02;
+                }
+                *jump_dir = jump_dir.clamp(-1.0, 1.0);
+            } else {
+                dir = cf32::new(self.jump_dir.unwrap(), -1.0);
+                let strength = Player::jump_strength(cur);
+                movpower = self.power * strength;
+                self.jump_dir = None;
+            }
+        } else {
+            self.jump_dir = None;
+
+            let mut brake = false;
+
+            if cur & BUTTON_LEFT != 0 {
+                dir.re -= 1.0;
+            }
+            if cur & BUTTON_RIGHT != 0 {
+                dir.re += 1.0;
+            }
+            if cur & BUTTON_UP != 0 {
+                dir.im -= 1.0;
+            }
+            if cur & BUTTON_DOWN != 0 {
+                if self.grounded {
+                    brake = true;
+                } else {
+                    dir.im += 1.0;
+                }
+            }
+
+            movpower = if self.grounded {
+                self.power / 20.0
+            } else {
+                self.power / 200.0
+            };
+
+            if brake {
+                dir = -self.vel;
+                movpower = self.power / 5.0;
+            }
         }
 
         let dirnorm = dir.norm();
-        if dirnorm > 0.5 {
+        if movpower > 0.1 && dirnorm > 0.1 {
             self.anim_timer += std::num::Wrapping(1);
 
-            // from 0.5 to 2.2 KiB to wasm size just for this line
-            dir = dir.unscale(dirnorm);
+            dir = dir.unscale(dir.norm());
 
-            self.vel += dir * self.power / 20.0;
-            self.power -= self.power / 20.0;
+            if self.grounded {
+                self.vel += dir.scale(movpower)
+            } else {
+                self.vel += dir.scale(movpower)
+            }
+            self.power -= movpower
         }
 
-        self.power += (200.0-self.power)/100.0;
 
+        self.power = 0.95*self.power + 0.05*300.0;
     }
     fn repel_point(&mut self, p : cf32) {
         let mut v =  self.pos - p;
@@ -119,6 +175,9 @@ impl Player {
             let accelerating = (veldir / v).re;
             //traceln!("accel {}", (accelerating*100.0) as i32);
             let fade = 1.0 - (vn - radius)/3.0;
+            if fade > 0.01 && v.im < -0.5 {
+                self.grounded = true;
+            }
             //traceln!("fade {}", (fade*100.0) as i32);
             let mut scale = if vn <= 5.0 { 1.0 } else { fade * fade  };
             if accelerating < 0.0 {
@@ -176,10 +235,19 @@ impl Player {
         }
     }
     fn movement(&mut self) {
-        self.vel += cf32::new(0.0, 0.1);
+        self.vel += cf32::new(0.0, 0.5);
+
+        if self.grounded {
+            // friction
+            self.vel.re -= self.vel.re * 0.002;
+            if self.vel.re.abs() < 0.001 {
+                self.vel.re = 0.0;
+            }
+        }
 
         self.pos += self.vel / 2000.0;
         self.vel -= self.vel / 2000.0;
+
         
         if self.pos.re < 4.0 {
             self.pos.re = 4.0;
@@ -198,7 +266,7 @@ impl Player {
             if self.vel.im > 0.0 { self.vel.im = 0.0; }
         }
     }
-    fn draw(&self, _global_frame: u8) {
+    fn draw(&self, _global_frame: u8, keys: u8) {
         draw_colours(3, 0, 0, 0);
         let bf = if self.anim_timer.0 & 0x1F < 16 {
             0
@@ -206,6 +274,14 @@ impl Player {
             BLIT_FLIP_X
         };
         blit(&WHEEL, self.pos.re as i32 - 4, self.pos.im as i32 - 4, 8, 8, BLIT_1BPP | bf);
+        if let Some(jump_dir) = self.jump_dir {
+            draw_colours(4, 0, 0, 0);
+            let mut v = cf32::new(jump_dir, -1.0);
+            v = v.unscale(v.norm());
+            let strength = Player::jump_strength(keys);
+            v = self.pos + v * 1.0 * ((2.0*strength).exp()*2.0 - 0.5); 
+            line(self.pos.re as i32 , self.pos.im as i32, v.re as i32, v.im as i32)
+        }
     }
 
     fn my_world_coords(&self) -> (u16, u16) {
@@ -322,6 +398,7 @@ impl State {
         self.player.control(self.prevpad, gamepad);
 
         for _ in 0..10 {
+            self.player.grounded = false;
             self.player.handle_collisions(&self.room);
             self.player.movement();
         }
@@ -329,7 +406,7 @@ impl State {
         self.textbox.control(self.prevpad, gamepad);
 
         self.room.draw(self.frame, self.player.my_world_coords());
-        self.player.draw(self.frame);
+        self.player.draw(self.frame, gamepad);
         self.textbox.draw(self.frame);
 
         self.prevpad = gamepad;
