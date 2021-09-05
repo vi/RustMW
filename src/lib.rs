@@ -8,7 +8,7 @@ use ufmt::uwrite;
 
 use num_complex::Complex32 as cf32;
 
-const _WHEEL: [u8; 8] = sprite8x8(
+static _WHEEL: [u8; 8] = sprite8x8(
     "
     . X . . X . . .
     . . X X X X . X
@@ -21,7 +21,7 @@ const _WHEEL: [u8; 8] = sprite8x8(
 ",
 );
 
-const WHEEL1: [u8; 32] = sprite16x16(
+static WHEEL1: [u8; 32] = sprite16x16(
     "
     . . . . . . . . . . . . . . . .
     . . . . . . . . . . . . . . . .
@@ -42,7 +42,7 @@ const WHEEL1: [u8; 32] = sprite16x16(
 ",
 );
 
-const WHEEL2: [u8; 32] = sprite16x16(
+static WHEEL2: [u8; 32] = sprite16x16(
     "
     . . . . . . . . . . . . . . . .
     . . . . . . . . . . . . . . . .
@@ -63,7 +63,7 @@ const WHEEL2: [u8; 32] = sprite16x16(
 ",
 );
 
-const SOLIDTILE: [u8; 8] = sprite8x8(
+static SOLIDTILE: [u8; 8] = sprite8x8(
     "
     . X . X . X . X
     X . X . X . X .
@@ -78,7 +78,95 @@ const SOLIDTILE: [u8; 8] = sprite8x8(
 
 type RoomData = [u32; 16];
 
-const MAP: RoomData = room16x16( "
+
+#[derive(Clone, Copy)]
+struct RoomMetadata {
+    block_type_sp: u8,
+    block_type_x: u8,
+    block_type_a: u8,
+    block_type_b: u8,
+}
+
+// 8x4 block of rooms
+type RoomBlock = [RoomData; 32];
+
+struct Area {
+    rooms: [RoomData; 32],
+    meta: [RoomMetadata; 32],
+    player_starting_point: Option<(u16,u16)>,
+}
+
+impl Area {
+    const fn new(s: &'static [u8]) -> Area {
+        let char_lookup = [CharDescription {
+            chr: b'S',
+            upper: LowlevelCellType::Special,
+            lower: LowlevelCellType::Empty,
+        }];
+        let (rooms, specials) = utils::makearea(s, char_lookup);
+        let meta = [RoomMetadata {
+            block_type_sp: 0,
+            block_type_x: 1,
+            block_type_a: 2,
+            block_type_b: 3,
+        }; 32];
+        let mut player_starting_point = None;
+
+        let mut i = 0;
+        while i < specials.len() {
+            if let Some(s) = specials[i] {
+                if s.chr == b'S' {
+                    player_starting_point = Some((s.x, s.y));
+                }
+            }
+            i+=1;
+        }
+
+        Area {
+            rooms, 
+            meta,
+            player_starting_point,
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+pub enum LowlevelCellType {
+    Empty,
+    Solid,
+    CustomA,
+    CustomB,
+    Special,
+}
+
+impl LowlevelCellType {
+    pub const fn ll_code(&self) -> u8 {
+        match self {
+            LowlevelCellType::Empty => 0b00,
+            LowlevelCellType::Solid => 0b01,
+            LowlevelCellType::CustomA => 0b10,
+            LowlevelCellType::CustomB => 0b11,
+            LowlevelCellType::Special => 0b00,
+        }
+    }
+}
+
+
+#[derive(Clone, Copy)]
+pub struct CharDescription {
+    chr: u8,
+    upper: LowlevelCellType,
+    lower: LowlevelCellType,
+}
+#[derive(Clone, Copy)]
+pub struct SpecialPosition {
+    chr: u8,
+    x: u16,
+    y: u16,
+}
+
+
+const MAP: RoomData = room16x16( b"
    |` ```           |
    |        `       |
    |XXXX       ,    |
@@ -87,6 +175,41 @@ const MAP: RoomData = room16x16( "
    |X   ,``  `,    X|
    |X ,`           X|
    |XXXXXX,XXXXXXXXX|
+");
+
+static AREA1: Area = Area::new(b"                                                                                                       <
+   |` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           |
+   |        `               `               `               `               `               `               `               `       |
+   |XXXX       ,     XXX       ,     XXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    |
+   |XXXX                            XXXX            XXXX            XXXX            XXXX            XXXX            XXXX            |
+   |X                                                              XX              XX              XX              XX              X|
+   |X   ,``  `,    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`````     XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    X|
+   |X ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           X|
+   |XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXX  XXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXX|
+   |` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           |
+   |        `               `               `               `               `               `               `               `       |
+   |XXXX       ,    XXXX       ,    XXXX       ,    XXXX            XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    |
+   |XXXX            XXXX            XXXX            XXXX            XXXX            XXXX            XXXX            XXXX            |
+   |X              XX              XX              XX              XX              XX              XX              XX              X|
+   |X   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``        XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    X|
+   |X ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           X|
+   |XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XX   XXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXX|
+   |` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           |
+   |        `               `               `                               `               `               `               `       |
+   |XXXX       ,    XXXX       ,    XXXX       ,               ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    |
+   |XXXX            XXXX            XXXXXXXXX,                      XXXX            XXXX            XXXX            XXXX            |
+   |X              XX              XX   XXXXXXX,                   XX              XX              XX              XX              X|
+   |X   ,``  `,    XX   ,``  `,    XX   XXXXXXXXXX,          `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    X|
+   |X ,`           XX ,`           XX ,`XXXXXXXXXXXXXX,            XX ,`           XX ,`           XX ,`           XX ,`           X|
+   |XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXX|
+   |` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           |
+   |        `               `               `               `               `               `               `               `       |
+   |XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    |
+   |XXXX            XXXX            XXXX            XXXX            XXXX            XXXX            XXXX            XXXX            |
+   |X              XX              XX              XX              XX              XX              XX              XX              X|
+   |X   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    X|
+   |X ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           X|
+   |XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXX|
 ");
 
 struct Player {
@@ -230,52 +353,53 @@ impl Player {
             self.vel += v.scale(scale);
         }
     }
-    fn handle_collisions(&mut self, r: &Room) {
+    fn handle_collisions(&mut self, r: &World) {
         //self.repel_point(cf32::new(70.0, 100.0));
         //return;
+        let fwc = World::from_world_coords;
         let (x,y) = self.my_world_coords();
         if x > 0 && y > 0 && r.get_tile(x-1, y-1) != 0 {
-            self.repel_point(self.from_world_coords((x-1, y-1))+ cf32::new(2.0, 4.0));
-            self.repel_point(self.from_world_coords((x-1, y-1))+ cf32::new(4.0, 2.0));
-            self.repel_point(self.from_world_coords((x-1, y-1))+ cf32::new(4.0, 4.0));
+            self.repel_point(fwc((x-1, y-1))+ cf32::new(2.0, 4.0));
+            self.repel_point(fwc((x-1, y-1))+ cf32::new(4.0, 2.0));
+            self.repel_point(fwc((x-1, y-1))+ cf32::new(4.0, 4.0));
         }
         if y > 0 && r.get_tile(x, y-1) != 0 {
-            self.repel_point(self.from_world_coords((x, y-1))+ cf32::new(-4.0, 4.0));
-            self.repel_point(self.from_world_coords((x, y-1))+ cf32::new(0.0, 4.0));
-            self.repel_point(self.from_world_coords((x, y-1))+ cf32::new(4.0, 4.0));
+            self.repel_point(fwc((x, y-1))+ cf32::new(-4.0, 4.0));
+            self.repel_point(fwc((x, y-1))+ cf32::new(0.0, 4.0));
+            self.repel_point(fwc((x, y-1))+ cf32::new(4.0, 4.0));
         }
         if y > 0 && r.get_tile(x+1, y-1) != 0 {
-            self.repel_point(self.from_world_coords((x+1, y-1))+ cf32::new(-1.0, 4.0));
-            self.repel_point(self.from_world_coords((x+1, y-1))+ cf32::new(-3.0, 2.0));
-            self.repel_point(self.from_world_coords((x+1, y-1))+ cf32::new(-3.0, 4.0));
+            self.repel_point(fwc((x+1, y-1))+ cf32::new(-1.0, 4.0));
+            self.repel_point(fwc((x+1, y-1))+ cf32::new(-3.0, 2.0));
+            self.repel_point(fwc((x+1, y-1))+ cf32::new(-3.0, 4.0));
         }
 
         if x > 0 && r.get_tile(x-1, y) != 0 {
-            self.repel_point(self.from_world_coords((x-1, y))+ cf32::new( 4.0, -4.0));
-            self.repel_point(self.from_world_coords((x-1, y))+ cf32::new( 4.0, 0.0));
-            self.repel_point(self.from_world_coords((x-1, y))+ cf32::new( 4.0, 4.0));
+            self.repel_point(fwc((x-1, y))+ cf32::new( 4.0, -4.0));
+            self.repel_point(fwc((x-1, y))+ cf32::new( 4.0, 0.0));
+            self.repel_point(fwc((x-1, y))+ cf32::new( 4.0, 4.0));
         }
         if  r.get_tile(x+1, y) != 0 {
-            self.repel_point(self.from_world_coords((x+1, y))+ cf32::new( -2.0, -4.0));
-            self.repel_point(self.from_world_coords((x+1, y))+ cf32::new( -2.0, 0.0));
-            self.repel_point(self.from_world_coords((x+1, y))+ cf32::new( -2.0, 4.0));
+            self.repel_point(fwc((x+1, y))+ cf32::new( -2.0, -4.0));
+            self.repel_point(fwc((x+1, y))+ cf32::new( -2.0, 0.0));
+            self.repel_point(fwc((x+1, y))+ cf32::new( -2.0, 4.0));
         }
 
 
         if x > 0 && r.get_tile(x-1, y+1) != 0 {
-            self.repel_point(self.from_world_coords((x-1, y+1))+ cf32::new(2.0, -2.0));
-            self.repel_point(self.from_world_coords((x-1, y+1))+ cf32::new(4.0, -0.0));
-            self.repel_point(self.from_world_coords((x-1, y+1))+ cf32::new(4.0, -2.0));
+            self.repel_point(fwc((x-1, y+1))+ cf32::new(2.0, -2.0));
+            self.repel_point(fwc((x-1, y+1))+ cf32::new(4.0, -0.0));
+            self.repel_point(fwc((x-1, y+1))+ cf32::new(4.0, -2.0));
         }
         if r.get_tile(x, y+1) != 0 {
-            self.repel_point(self.from_world_coords((x, y+1))+ cf32::new(-4.0, -2.0));
-            self.repel_point(self.from_world_coords((x, y+1))+ cf32::new(0.0, -2.0));
-            self.repel_point(self.from_world_coords((x, y+1))+ cf32::new(4.0, -2.0));
+            self.repel_point(fwc((x, y+1))+ cf32::new(-4.0, -2.0));
+            self.repel_point(fwc((x, y+1))+ cf32::new(0.0, -2.0));
+            self.repel_point(fwc((x, y+1))+ cf32::new(4.0, -2.0));
         }
         if r.get_tile(x+1, y+1) != 0 {
-            self.repel_point(self.from_world_coords((x+1, y+1))+ cf32::new(-1.0, -2.0));
-            self.repel_point(self.from_world_coords((x+1, y+1))+ cf32::new(-3.0,  -0.0));
-            self.repel_point(self.from_world_coords((x+1, y+1))+ cf32::new(-3.0, -2.0));
+            self.repel_point(fwc((x+1, y+1))+ cf32::new(-1.0, -2.0));
+            self.repel_point(fwc((x+1, y+1))+ cf32::new(-3.0,  -0.0));
+            self.repel_point(fwc((x+1, y+1))+ cf32::new(-3.0, -2.0));
         }
     }
     fn movement(&mut self) {
@@ -330,27 +454,7 @@ impl Player {
     }
 
     fn my_world_coords(&self) -> (u16, u16) {
-        let x = match self.pos.re {
-            t if t <= 4.0 => 0,
-            t if t >= 4.0 + 16.0*8.0 => 15,
-            t => {
-                ((t - 0.0) / 8.0) as u16
-            }
-        };
-        let y = match self.pos.im {
-            t if t <= 4.0 => 0,
-            t if t >= 4.0 + 16.0*8.0 => 15,
-            t => {
-                ((t - 0.0) / 8.0) as u16
-            }
-        };
-        (x,y)
-    }
-    fn from_world_coords(&self, (x,y): (u16, u16)) -> cf32 {
-        cf32::new(
-            8.0 * x as f32 + 4.0,
-            8.0 * y as f32 + 4.0,
-        )
+        World::to_world_coords(self.pos)
     }
 }
 
@@ -380,22 +484,25 @@ impl TextBox {
     }
 }
 
-struct Room {   
+struct World {   
 }
 
-impl Room {
+impl World {
     const fn new() -> Self {
         Self {
 
         }
     }
 
-    fn draw(&self, _global_frame: u8, _player_coords:(u16,u16), cam: &Camera) {
-        for y in 0..16 {
-            for x in 0..16 {
+    fn draw(&self, _global_frame: u8, player_coords:(u16,u16), cam: &Camera) {
+        let (camx, camy) = World::to_world_coords(cam.pos);
+        let minx = camx.saturating_sub(9);
+        let miny = camy.saturating_sub(9);
+        for y in miny..(miny+19) {
+            for x in minx..(minx+19) {
                 if self.get_tile(x,y) != 0 {
                     let mut col = 2;
-                    if (_player_coords.0 as i32 - x as i32).abs() <= 1 && (_player_coords.1 as i32 - y as i32).abs() <= 1  {
+                    if (player_coords.0 as i32 - x as i32).abs() <= 1 && (player_coords.1 as i32 - y as i32).abs() <= 1  {
                         col = 4;
                     }
                     let upperleft = (8.0 * cf32::new(x as f32, y as f32)) - cam.pos + cf32::new(0.5, 0.5) * SCREEN_SIZE as f32;
@@ -410,10 +517,42 @@ impl Room {
     }
 
     fn get_tile(&self, x: u16, y: u16) -> u8 {
-        if x >= 16 || y >= 16 {
+        if x >= 16*8 || y >= 16*4 {
             return 0;
         }
-        ((MAP[y as usize] >> (x as usize*2)) & 0b11) as u8
+
+        let room_x = x >> 4;
+        let room_y = y >> 4;
+        let within_room_x = x & 0xF;
+        let within_room_y = y & 0xF;
+
+
+        ((AREA1.rooms[(room_y*8+room_x) as usize][within_room_y as usize] >> (within_room_x as usize*2)) & 0b11) as u8
+    }
+
+    pub fn from_world_coords((x,y): (u16, u16)) -> cf32 {
+        cf32::new(
+            8.0 * x as f32 + 4.0,
+            8.0 * y as f32 + 4.0,
+        )
+    }
+
+    pub fn to_world_coords(pos: cf32) -> (u16, u16) {
+        let x = match pos.re {
+            t if t <= 4.0 => 0,
+            t if t >= 4.0 + 16.0*8.0*8.0 => 127,
+            t => {
+                ((t - 0.0) / 8.0) as u16
+            }
+        };
+        let y = match pos.im {
+            t if t <= 4.0 => 0,
+            t if t >= 4.0 + 16.0*8.0*4.0 => 63,
+            t => {
+                ((t - 0.0) / 8.0) as u16
+            }
+        };
+        (x,y)
     }
 }
 
@@ -512,7 +651,7 @@ struct State {
     player: Player,
     textbox: TextBox,
 
-    room: Room,
+    room: World,
 }
 
 impl State {
@@ -523,7 +662,7 @@ impl State {
             camera: Camera::new(),
             player: Player::new(),
             textbox: TextBox::new(),
-            room: Room::new(),
+            room: World::new(),
         }
     }
 
