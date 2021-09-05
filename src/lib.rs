@@ -317,7 +317,7 @@ impl Player {
             self.anim_timer += std::num::Wrapping(1);
         }
     }
-    fn repel_point(&mut self, p : cf32) {
+    fn repel_point(&mut self, p : cf32, acceleration: &mut cf32) {
         let mut v =  self.pos - p;
         let vn = v.norm();
         
@@ -350,71 +350,71 @@ impl Player {
             if accelerating < 0.0 {
                 scale *= 10.0;
             } 
-            self.vel += v.scale(scale);
+            *acceleration += v.scale(scale);
         }
     }
-    fn handle_collisions(&mut self, r: &World) {
-        //self.repel_point(cf32::new(70.0, 100.0));
+    fn handle_collisions(&mut self, r: &World, acceleration: &mut cf32 ) {
+        //rp(cf32::new(70.0, 100.0));
         //return;
         let fwc = World::from_world_coords;
         let (x,y) = self.my_world_coords();
+        let mut rp = |p|self.repel_point(p, acceleration);
         if x > 0 && y > 0 && r.get_tile(x-1, y-1) != 0 {
-            self.repel_point(fwc((x-1, y-1))+ cf32::new(2.0, 4.0));
-            self.repel_point(fwc((x-1, y-1))+ cf32::new(4.0, 2.0));
-            self.repel_point(fwc((x-1, y-1))+ cf32::new(4.0, 4.0));
+            rp(fwc((x-1, y-1))+ cf32::new(2.0, 4.0));
+            rp(fwc((x-1, y-1))+ cf32::new(4.0, 2.0));
+            rp(fwc((x-1, y-1))+ cf32::new(4.0, 4.0));
         }
         if y > 0 && r.get_tile(x, y-1) != 0 {
-            self.repel_point(fwc((x, y-1))+ cf32::new(-4.0, 4.0));
-            self.repel_point(fwc((x, y-1))+ cf32::new(0.0, 4.0));
-            self.repel_point(fwc((x, y-1))+ cf32::new(4.0, 4.0));
+            rp(fwc((x, y-1))+ cf32::new(-4.0, 4.0));
+            rp(fwc((x, y-1))+ cf32::new(0.0, 4.0));
+            rp(fwc((x, y-1))+ cf32::new(4.0, 4.0));
         }
         if y > 0 && r.get_tile(x+1, y-1) != 0 {
-            self.repel_point(fwc((x+1, y-1))+ cf32::new(-1.0, 4.0));
-            self.repel_point(fwc((x+1, y-1))+ cf32::new(-3.0, 2.0));
-            self.repel_point(fwc((x+1, y-1))+ cf32::new(-3.0, 4.0));
+            rp(fwc((x+1, y-1))+ cf32::new(-1.0, 4.0));
+            rp(fwc((x+1, y-1))+ cf32::new(-3.0, 2.0));
+            rp(fwc((x+1, y-1))+ cf32::new(-3.0, 4.0));
         }
 
         if x > 0 && r.get_tile(x-1, y) != 0 {
-            self.repel_point(fwc((x-1, y))+ cf32::new( 4.0, -4.0));
-            self.repel_point(fwc((x-1, y))+ cf32::new( 4.0, 0.0));
-            self.repel_point(fwc((x-1, y))+ cf32::new( 4.0, 4.0));
+            rp(fwc((x-1, y))+ cf32::new( 4.0, -4.0));
+            rp(fwc((x-1, y))+ cf32::new( 4.0, 0.0));
+            rp(fwc((x-1, y))+ cf32::new( 4.0, 4.0));
         }
         if  r.get_tile(x+1, y) != 0 {
-            self.repel_point(fwc((x+1, y))+ cf32::new( -2.0, -4.0));
-            self.repel_point(fwc((x+1, y))+ cf32::new( -2.0, 0.0));
-            self.repel_point(fwc((x+1, y))+ cf32::new( -2.0, 4.0));
+            rp(fwc((x+1, y))+ cf32::new( -2.0, -4.0));
+            rp(fwc((x+1, y))+ cf32::new( -2.0, 0.0));
+            rp(fwc((x+1, y))+ cf32::new( -2.0, 4.0));
         }
 
 
         if x > 0 && r.get_tile(x-1, y+1) != 0 {
-            self.repel_point(fwc((x-1, y+1))+ cf32::new(2.0, -2.0));
-            self.repel_point(fwc((x-1, y+1))+ cf32::new(4.0, -0.0));
-            self.repel_point(fwc((x-1, y+1))+ cf32::new(4.0, -2.0));
+            rp(fwc((x-1, y+1))+ cf32::new(2.0, -2.0));
+            rp(fwc((x-1, y+1))+ cf32::new(4.0, -0.0));
+            rp(fwc((x-1, y+1))+ cf32::new(4.0, -2.0));
         }
         if r.get_tile(x, y+1) != 0 {
-            self.repel_point(fwc((x, y+1))+ cf32::new(-4.0, -2.0));
-            self.repel_point(fwc((x, y+1))+ cf32::new(0.0, -2.0));
-            self.repel_point(fwc((x, y+1))+ cf32::new(4.0, -2.0));
+            rp(fwc((x, y+1))+ cf32::new(-4.0, -2.0));
+            rp(fwc((x, y+1))+ cf32::new(0.0, -2.0));
+            rp(fwc((x, y+1))+ cf32::new(4.0, -2.0));
         }
         if r.get_tile(x+1, y+1) != 0 {
-            self.repel_point(fwc((x+1, y+1))+ cf32::new(-1.0, -2.0));
-            self.repel_point(fwc((x+1, y+1))+ cf32::new(-3.0,  -0.0));
-            self.repel_point(fwc((x+1, y+1))+ cf32::new(-3.0, -2.0));
+            rp(fwc((x+1, y+1))+ cf32::new(-1.0, -2.0));
+            rp(fwc((x+1, y+1))+ cf32::new(-3.0,  -0.0));
+            rp(fwc((x+1, y+1))+ cf32::new(-3.0, -2.0));
         }
     }
-    fn movement(&mut self) {
-        self.vel += cf32::new(0.0, 0.5);
+    fn movement(&mut self, acceleration: &mut cf32) {
+        *acceleration += cf32::new(0.0, 0.5);
 
         if self.grounded {
             // friction
-            self.vel.re -= self.vel.re * 0.002;
+            *acceleration -= cf32::new(self.vel.re * 0.002, 0.0);
             if self.vel.re.abs() < 0.001 {
                 self.vel.re = 0.0;
             }
         }
 
-        self.pos += self.vel / 2000.0;
-        self.vel -= self.vel / 2000.0;
+        *acceleration -= self.vel / 2000.0;
          
         /*
         if self.pos.re < 4.0 {
@@ -675,9 +675,14 @@ impl State {
         self.player.control(self.prevpad, gamepad);
 
         for _ in 0..10 {
+            let epsilon = 1.0;
             self.player.grounded = false;
-            self.player.handle_collisions(&self.room);
-            self.player.movement();
+            let mut acceleration = cf32::new(0.0, 0.0);
+            self.player.handle_collisions(&self.room, &mut acceleration);
+            self.player.movement(&mut acceleration);
+        
+            self.player.vel += epsilon * acceleration;
+            self.player.pos += epsilon * self.player.vel / 2000.0;
         }
 
         self.textbox.control(self.prevpad, gamepad);
