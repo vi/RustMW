@@ -124,10 +124,10 @@ use crate::{CharDescription, RoomBlock, SpecialPosition, LowlevelCellType};
 const fn lookup_char<const N:usize>(c: u8, char_lookup:[CharDescription; N]) -> CharDescription {
     let mut j = 0;
     while j < char_lookup.len() {
-        j+=1;
         if char_lookup[j].chr == c {
             return char_lookup[j];
         }
+        j+=1;
     }
     loop{
         b"Special character type not found"[999];

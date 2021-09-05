@@ -3,78 +3,12 @@ use wasm4::*;
 
 pub mod utils;
 
-use utils::{draw_colours, sprite8x8, sprite16x16, room16x16,  UfmtBuf};
+use utils::{draw_colours, UfmtBuf};
 use ufmt::uwrite;
 
 use num_complex::Complex32 as cf32;
 
-static _WHEEL: [u8; 8] = sprite8x8(
-    "
-    . X . . X . . .
-    . . X X X X . X
-    . X . . . . X .
-    X X . . . . X .
-    . X . . . . X X
-    . X . . . . X .
-    X . X X X X . .
-    . . . X . . X .
-",
-);
-
-static WHEEL1: [u8; 32] = sprite16x16(
-    "
-    . . . . . . . . . . . . . . . .
-    . . . . . . . . . . . . . . . .
-    . . . . . . . . . . . . . . . .
-    . . . . X . . . X . . . . . . .  
-    . . . . . X . . X . . . X . . .
-    . . . . . . X X X X . X . . . .
-    . . . . . X . . . . X . . . . .
-    . . . X X X . . . . X . . . . .
-    . . . . . X . . . . X X X . . .
-    . . . . . X . . . . X . . . . .
-    . . . . X . X X X X . . . . . .
-    . . . . . . X . . . X . . . . .
-    . . . . . X . . . . . X . . . .
-    . . . . . . . . . . . . . . . .
-    . . . . . . . . . . . . . . . .
-    . . . . . . . . . . . . . . . .
-",
-);
-
-static WHEEL2: [u8; 32] = sprite16x16(
-    "
-    . . . . . . . . . . . . . . . .
-    . . . . . . . . . . . . . . . .
-    . . . . . . . . . . . . . . . .
-    . . . . . . X . . . X . . . . .  
-    . . . . . . X . . X . . . . . .
-    . . . X . . . X X X . . . . . .
-    . . . . X . X . . . X X . . . .
-    . . . . . X . . . . . X X X . .
-    . . . X X X . . . . . X . . . .
-    . . . . . X . . . . X . . . . .
-    . . . . X . X X X X . X . . . .
-    . . . X . . . X . . . . X . . .
-    . . . . . . . X . . . . . . . .
-    . . . . . . . . . . . . . . . .
-    . . . . . . . . . . . . . . . .
-    . . . . . . . . . . . . . . . .
-",
-);
-
-static SOLIDTILE: [u8; 8] = sprite8x8(
-    "
-    . X . X . X . X
-    X . X . X . X .
-    . X . X . X . X
-    X . X . X . X .
-    . X . X . X . X
-    X . X . X . X .
-    . X . X . X . X
-    X . X . X . X .
-",
-);
+mod sprites;
 
 type RoomData = [u32; 16];
 
@@ -90,7 +24,7 @@ struct RoomMetadata {
 // 8x4 block of rooms
 type RoomBlock = [RoomData; 32];
 
-struct Area {
+pub struct Area {
     rooms: [RoomData; 32],
     meta: [RoomMetadata; 32],
     player_starting_point: Option<(u16,u16)>,
@@ -166,51 +100,7 @@ pub struct SpecialPosition {
 }
 
 
-const MAP: RoomData = room16x16( b"
-   |` ```           |
-   |        `       |
-   |XXXX       ,    |
-   |XXXX            |
-   |X              X|
-   |X   ,``  `,    X|
-   |X ,`           X|
-   |XXXXXX,XXXXXXXXX|
-");
-
-static AREA1: Area = Area::new(b"                                                                                                       <
-   |` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           |
-   |        `               `               `               `               `               `               `               `       |
-   |XXXX       ,     XXX       ,     XXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    |
-   |XXXX                            XXXX            XXXX            XXXX            XXXX            XXXX            XXXX            |
-   |X                                                              XX              XX              XX              XX              X|
-   |X   ,``  `,    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`````     XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    X|
-   |X ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           X|
-   |XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXX  XXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXX|
-   |` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           |
-   |        `               `               `               `               `               `               `               `       |
-   |XXXX       ,    XXXX       ,    XXXX       ,    XXXX            XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    |
-   |XXXX            XXXX            XXXX            XXXX            XXXX            XXXX            XXXX            XXXX            |
-   |X              XX              XX              XX              XX              XX              XX              XX              X|
-   |X   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``        XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    X|
-   |X ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           X|
-   |XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XX   XXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXX|
-   |` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           |
-   |        `               `               `                               `               `               `               `       |
-   |XXXX       ,    XXXX       ,    XXXX       ,               ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    |
-   |XXXX            XXXX            XXXXXXXXX,                      XXXX            XXXX            XXXX            XXXX            |
-   |X              XX              XX   XXXXXXX,                   XX              XX              XX              XX              X|
-   |X   ,``  `,    XX   ,``  `,    XX   XXXXXXXXXX,          `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    X|
-   |X ,`           XX ,`           XX ,`XXXXXXXXXXXXXX,            XX ,`           XX ,`           XX ,`           XX ,`           X|
-   |XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXX|
-   |` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           |
-   |        `               `               `               `               `               `               `               `       |
-   |XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    |
-   |XXXX            XXXX            XXXX            XXXX            XXXX            XXXX            XXXX            XXXX            |
-   |X              XX              XX              XX              XX              XX              XX              XX              X|
-   |X   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    X|
-   |X ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           X|
-   |XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXX|
-");
+mod level;
 
 struct Player {
     pos: cf32,
@@ -225,7 +115,7 @@ struct Player {
 impl Player {
     const fn new() -> Player {
         Player {
-            pos: cf32::new(70.0, 70.0),
+            pos: cf32::new(f32::NAN, f32::NAN),
             vel: cf32::new(0.0, 0.0),
             power: 50.0,
             anim_timer: std::num::Wrapping(0),
@@ -439,9 +329,9 @@ impl Player {
         draw_colours(3, 0, 0, 0);
         let onscreen = self.pos - cam.pos + cf32::new(0.5, 0.5) * SCREEN_SIZE as f32;
         if self.anim_timer.0 & 0x1F < 16 {
-            blit(&WHEEL1, onscreen.re as i32 - 8, onscreen.im as i32 - 8, 16, 16, BLIT_1BPP);
+            blit(&sprites::WHEEL1, onscreen.re as i32 - 8, onscreen.im as i32 - 8, 16, 16, BLIT_1BPP);
         } else {
-            blit(&WHEEL2, onscreen.re as i32 - 8, onscreen.im as i32 - 8, 16, 16, BLIT_1BPP);
+            blit(&sprites::WHEEL2, onscreen.re as i32 - 8, onscreen.im as i32 - 8, 16, 16, BLIT_1BPP);
         };
         if let Some(jump_dir) = self.jump_dir {
             draw_colours(4, 0, 0, 0);
@@ -510,7 +400,7 @@ impl World {
                         continue;
                     }
                     draw_colours(col, 0, 0, 0);
-                    blit(&SOLIDTILE, upperleft.re as i32, upperleft.im as i32, 8, 8, 0);
+                    blit(&sprites::SOLIDTILE, upperleft.re as i32, upperleft.im as i32, 8, 8, 0);
                 }
             }
         }
@@ -527,7 +417,7 @@ impl World {
         let within_room_y = y & 0xF;
 
 
-        ((AREA1.rooms[(room_y*8+room_x) as usize][within_room_y as usize] >> (within_room_x as usize*2)) & 0b11) as u8
+        ((level::AREA1.rooms[(room_y*8+room_x) as usize][within_room_y as usize] >> (within_room_x as usize*2)) & 0b11) as u8
     }
 
     pub fn from_world_coords((x,y): (u16, u16)) -> cf32 {
@@ -656,14 +546,15 @@ struct State {
 
 impl State {
     pub const fn new() -> State {
-        State {
+        let s = State {
             prevpad: 0,
             frame: 0,
             camera: Camera::new(),
             player: Player::new(),
             textbox: TextBox::new(),
             room: World::new(),
-        }
+        };
+        s
     }
 
     pub fn tick(&mut self) {
@@ -672,6 +563,16 @@ impl State {
         }
 
         let gamepad = unsafe { *GAMEPAD1 };
+
+        if ! self.player.pos.is_normal() {
+            if let Some(pos) = level::AREA1.player_starting_point {
+                self.player.pos = World::from_world_coords(pos);
+                self.camera.pos = self.player.pos;
+            } else {
+                return;
+            }
+        }
+
         self.player.control(self.prevpad, gamepad);
 
         for _ in 0..10 {
