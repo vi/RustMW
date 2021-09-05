@@ -26,6 +26,33 @@ pub const fn sprite8x8(x: &'static str) -> [u8; 8] {
     buf
 }
 
+pub const fn sprite16x16(x: &'static str) -> [u8; 32] {
+    let mut buf = [0u8; 32];
+    let s = x.as_bytes();
+    let mut byteidx = 0;
+    let mut bitidx = 0;
+    let mut i = 0;
+    while i < s.len() {
+        let chr = s[i];
+        match chr {
+            b'X' => {
+                bitidx += 1;
+            }
+            b'.' => {
+                buf[byteidx] |= 1 << (7 - bitidx);
+                bitidx += 1;
+            }
+            _ => (),
+        }
+        if bitidx >= 8 {
+            bitidx = 0;
+            byteidx += 1;
+        }
+        i += 1;
+    }
+    buf
+}
+
 pub const fn room16x16(s: &'static str) -> [u32; 16] {
     let mut buf = [0u32; 16];
 

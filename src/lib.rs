@@ -3,12 +3,12 @@ use wasm4::*;
 
 pub mod utils;
 
-use utils::{draw_colours, sprite8x8, room16x16,  UfmtBuf};
+use utils::{draw_colours, sprite8x8, sprite16x16, room16x16,  UfmtBuf};
 use ufmt::uwrite;
 
 use num_complex::Complex32 as cf32;
 
-const WHEEL: [u8; 8] = sprite8x8(
+const _WHEEL: [u8; 8] = sprite8x8(
     "
     . X . . X . . .
     . . X X X X . X
@@ -18,6 +18,48 @@ const WHEEL: [u8; 8] = sprite8x8(
     . X . . . . X .
     X . X X X X . .
     . . . X . . X .
+",
+);
+
+const WHEEL1: [u8; 32] = sprite16x16(
+    "
+    . . . . . . . . . . . . . . . .
+    . . . . . . . . . . . . . . . .
+    . . . . . . . . . . . . . . . .
+    . . . . . . . . . . . . . . . .
+    . . . . X . . . X . . . . . . .  
+    . . . . . X . . X . . . X . . .
+    . . . . . . X X X X . X . . . .
+    . . . . . X . . . . X . . . . .
+    . . . X X X . . . . X . . . . .
+    . . . . . X . . . . X X X . . .
+    . . . . . X . . . . X . . . . .
+    . . . . X . X X X X . . . . . .
+    . . . . . . X . . . X . . . . .
+    . . . . . X . . . . . X . . . .
+    . . . . . . . . . . . . . . . .
+    . . . . . . . . . . . . . . . .
+",
+);
+
+const WHEEL2: [u8; 32] = sprite16x16(
+    "
+    . . . . . . . . . . . . . . . .
+    . . . . . . . . . . . . . . . .
+    . . . . . . . . . . . . . . . .
+    . . . . . . . . . . . . . . . .
+    . . . . . . X . . . X . . . . .  
+    . . . . . . X . . X . . . . . .
+    . . . X . . . X X X . . . . . .
+    . . . . X . X . . . X X . . . .
+    . . . . . X . . . . . X X X . .
+    . . . X X X . . . . . X . . . .
+    . . . . . X . . . . X . . . . .
+    . . . . X . X X X X . X . . . .
+    . . . X . . . X . . . . X . . .
+    . . . . . . . X . . . . . . . .
+    . . . . . . . . . . . . . . . .
+    . . . . . . . . . . . . . . . .
 ",
 );
 
@@ -44,7 +86,7 @@ const MAP: RoomData = room16x16( "
    |X              X|
    |X   ,``  `,    X|
    |X ,`           X|
-   |XXXXXXXXXXXXXXXX|
+   |XXXXXX,XXXXXXXXX|
 ");
 
 struct Player {
@@ -135,8 +177,6 @@ impl Player {
 
         let dirnorm = dir.norm();
         if movpower > 0.1 && dirnorm > 0.1 {
-            self.anim_timer += std::num::Wrapping(1);
-
             dir = dir.unscale(dir.norm());
 
             if self.grounded {
@@ -149,6 +189,10 @@ impl Player {
 
 
         self.power = 0.95*self.power + 0.05*300.0;
+
+        if self.grounded && self.vel.re.abs() > 5.0 {
+            self.anim_timer += std::num::Wrapping(1);
+        }
     }
     fn repel_point(&mut self, p : cf32) {
         let mut v =  self.pos - p;
@@ -268,12 +312,11 @@ impl Player {
     }
     fn draw(&self, _global_frame: u8, keys: u8) {
         draw_colours(3, 0, 0, 0);
-        let bf = if self.anim_timer.0 & 0x1F < 16 {
-            0
+        if self.anim_timer.0 & 0x1F < 16 {
+            blit(&WHEEL1, self.pos.re as i32 - 8, self.pos.im as i32 - 8, 16, 16, BLIT_1BPP);
         } else {
-            BLIT_FLIP_X
+            blit(&WHEEL2, self.pos.re as i32 - 8, self.pos.im as i32 - 8, 16, 16, BLIT_1BPP);
         };
-        blit(&WHEEL, self.pos.re as i32 - 4, self.pos.im as i32 - 4, 8, 8, BLIT_1BPP | bf);
         if let Some(jump_dir) = self.jump_dir {
             draw_colours(4, 0, 0, 0);
             let mut v = cf32::new(jump_dir, -1.0);
