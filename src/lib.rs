@@ -26,7 +26,6 @@ const WHEEL1: [u8; 32] = sprite16x16(
     . . . . . . . . . . . . . . . .
     . . . . . . . . . . . . . . . .
     . . . . . . . . . . . . . . . .
-    . . . . . . . . . . . . . . . .
     . . . . X . . . X . . . . . . .  
     . . . . . X . . X . . . X . . .
     . . . . . . X X X X . X . . . .
@@ -39,12 +38,12 @@ const WHEEL1: [u8; 32] = sprite16x16(
     . . . . . X . . . . . X . . . .
     . . . . . . . . . . . . . . . .
     . . . . . . . . . . . . . . . .
+    . . . . . . . . . . . . . . . .
 ",
 );
 
 const WHEEL2: [u8; 32] = sprite16x16(
     "
-    . . . . . . . . . . . . . . . .
     . . . . . . . . . . . . . . . .
     . . . . . . . . . . . . . . . .
     . . . . . . . . . . . . . . . .
@@ -58,6 +57,7 @@ const WHEEL2: [u8; 32] = sprite16x16(
     . . . . X . X X X X . X . . . .
     . . . X . . . X . . . . X . . .
     . . . . . . . X . . . . . . . .
+    . . . . . . . . . . . . . . . .
     . . . . . . . . . . . . . . . .
     . . . . . . . . . . . . . . . .
 ",
@@ -291,8 +291,8 @@ impl Player {
 
         self.pos += self.vel / 2000.0;
         self.vel -= self.vel / 2000.0;
-
-        
+         
+        /*
         if self.pos.re < 4.0 {
             self.pos.re = 4.0;
             if self.vel.re < 0.0 { self.vel.re = 0.0; }
@@ -309,45 +309,47 @@ impl Player {
             self.pos.im  = 1.0*SCREEN_SIZE as f32 - 10.0;
             if self.vel.im > 0.0 { self.vel.im = 0.0; }
         }
+        */
     }
-    fn draw(&self, _global_frame: u8, keys: u8) {
+    fn draw(&self, _global_frame: u8, keys: u8, cam: &Camera) {
         draw_colours(3, 0, 0, 0);
+        let onscreen = self.pos - cam.pos + cf32::new(0.5, 0.5) * SCREEN_SIZE as f32;
         if self.anim_timer.0 & 0x1F < 16 {
-            blit(&WHEEL1, self.pos.re as i32 - 8, self.pos.im as i32 - 8, 16, 16, BLIT_1BPP);
+            blit(&WHEEL1, onscreen.re as i32 - 8, onscreen.im as i32 - 8, 16, 16, BLIT_1BPP);
         } else {
-            blit(&WHEEL2, self.pos.re as i32 - 8, self.pos.im as i32 - 8, 16, 16, BLIT_1BPP);
+            blit(&WHEEL2, onscreen.re as i32 - 8, onscreen.im as i32 - 8, 16, 16, BLIT_1BPP);
         };
         if let Some(jump_dir) = self.jump_dir {
             draw_colours(4, 0, 0, 0);
             let mut v = cf32::new(jump_dir, -1.0);
             v = v.unscale(v.norm());
             let strength = Player::jump_strength(keys);
-            v = self.pos + v * 1.0 * ((2.0*strength).exp()*2.0 - 0.5); 
-            line(self.pos.re as i32 , self.pos.im as i32, v.re as i32, v.im as i32)
+            v = onscreen + v * 1.0 * ((2.0*strength).exp()*2.0 - 0.5); 
+            line(onscreen.re as i32 , onscreen.im as i32, v.re as i32, v.im as i32)
         }
     }
 
     fn my_world_coords(&self) -> (u16, u16) {
         let x = match self.pos.re {
-            t if t <= 24.0 => 0,
-            t if t >= 24.0 + 16.0*8.0 => 15,
+            t if t <= 4.0 => 0,
+            t if t >= 4.0 + 16.0*8.0 => 15,
             t => {
-                ((t - 20.0) / 8.0) as u16
+                ((t - 0.0) / 8.0) as u16
             }
         };
         let y = match self.pos.im {
-            t if t <= 24.0 => 0,
-            t if t >= 24.0 + 16.0*8.0 => 15,
+            t if t <= 4.0 => 0,
+            t if t >= 4.0 + 16.0*8.0 => 15,
             t => {
-                ((t - 20.0) / 8.0) as u16
+                ((t - 0.0) / 8.0) as u16
             }
         };
         (x,y)
     }
     fn from_world_coords(&self, (x,y): (u16, u16)) -> cf32 {
         cf32::new(
-            8.0 * x as f32 + 24.0,
-            8.0 * y as f32 + 24.0,
+            8.0 * x as f32 + 4.0,
+            8.0 * y as f32 + 4.0,
         )
     }
 }
@@ -388,7 +390,7 @@ impl Room {
         }
     }
 
-    fn draw(&self, _global_frame: u8, _player_coords:(u16,u16)) {
+    fn draw(&self, _global_frame: u8, _player_coords:(u16,u16), cam: &Camera) {
         for y in 0..16 {
             for x in 0..16 {
                 if self.get_tile(x,y) != 0 {
@@ -396,8 +398,12 @@ impl Room {
                     if (_player_coords.0 as i32 - x as i32).abs() <= 1 && (_player_coords.1 as i32 - y as i32).abs() <= 1  {
                         col = 4;
                     }
+                    let upperleft = (8.0 * cf32::new(x as f32, y as f32)) - cam.pos + cf32::new(0.5, 0.5) * SCREEN_SIZE as f32;
+                    if upperleft.re < 0.5 || upperleft.im < 0.5 || upperleft.re + 8.5 > SCREEN_SIZE as f32  || upperleft.im + 8.5 >= SCREEN_SIZE as f32 {
+                        continue;
+                    }
                     draw_colours(col, 0, 0, 0);
-                    blit(&SOLIDTILE, 20+8*x as i32, 20+8*y as i32, 8, 8, 0);
+                    blit(&SOLIDTILE, upperleft.re as i32, upperleft.im as i32, 8, 8, 0);
                 }
             }
         }
@@ -411,10 +417,27 @@ impl Room {
     }
 }
 
+struct Camera {
+    pos: cf32,
+}
+
+impl Camera {
+    const fn new() -> Camera {
+        Camera {
+            pos: cf32::new(70.0, 70.0),
+        }
+    }
+
+    fn update(&mut self, p : &Player) {
+        self.pos = p.pos;
+    }
+}
+
 struct State {
     prevpad: u8,
     frame: u8,
 
+    camera: Camera,
     player: Player,
     textbox: TextBox,
 
@@ -426,6 +449,7 @@ impl State {
         State {
             prevpad: 0,
             frame: 0,
+            camera: Camera::new(),
             player: Player::new(),
             textbox: TextBox::new(),
             room: Room::new(),
@@ -447,9 +471,10 @@ impl State {
         }
 
         self.textbox.control(self.prevpad, gamepad);
-
-        self.room.draw(self.frame, self.player.my_world_coords());
-        self.player.draw(self.frame, gamepad);
+        
+        self.camera.update(&self.player);
+        self.room.draw(self.frame, self.player.my_world_coords(), &self.camera);
+        self.player.draw(self.frame, gamepad, &self.camera);
         self.textbox.draw(self.frame);
 
         self.prevpad = gamepad;
