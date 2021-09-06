@@ -41,18 +41,18 @@ impl Player {
         let mut dir = cf32::new(0.0, 0.0);
         let mut movpower : f32 = 0.0;
 
-        if self.grounded && prev & BUTTON_2 != 0 {
+        if prev & BUTTON_2 != 0 {
             self.jump_dir = Some(self.jump_dir.unwrap_or_default());
             let jump_dir = self.jump_dir.as_mut().unwrap();
-            if cur & BUTTON_2 != 0 {
-                if cur & BUTTON_LEFT != 0 {
-                    *jump_dir -= 0.03;
-                }
-                if cur & BUTTON_RIGHT != 0 {
-                    *jump_dir += 0.03;
-                }
-                *jump_dir = jump_dir.clamp(-1.0, 1.0);
-            } else {
+            if cur & BUTTON_LEFT != 0 {
+                *jump_dir -= 0.03;
+            }
+            if cur & BUTTON_RIGHT != 0 {
+                *jump_dir += 0.03;
+            }
+            *jump_dir = jump_dir.clamp(-1.0, 1.0);
+            if self.grounded && cur & BUTTON_2 == 0 {
+                // trigger the jump
                 dir = cf32::new(self.jump_dir.unwrap(), -1.0);
                 let strength = Player::jump_strength(cur);
                 movpower = self.power * strength;
@@ -222,7 +222,11 @@ impl Player {
             blit(&sprites::WHEEL2, onscreen.re as i32 - 8, onscreen.im as i32 - 8, 16, 16, BLIT_1BPP);
         };
         if let Some(jump_dir) = self.jump_dir {
-            draw_colours(4, 0, 0, 0);
+            if self.grounded {
+                draw_colours(4, 0, 0, 0);
+            } else {
+                draw_colours(2, 0, 0, 0);
+            }
             let mut v = cf32::new(jump_dir, -1.0);
             v = v.unscale(v.norm());
             let strength = Player::jump_strength(keys);
