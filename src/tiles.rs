@@ -59,10 +59,41 @@ impl TileType for UsualArea1Tile {
     }
 }
 
+
+#[derive(Clone, Copy)]
+pub struct JumpyTile;
+static JUMPYTILE : [CollisionCenter; 16] = [
+    CollisionCenter{rp: cf32::new(-3.0,  4.0), rad:1.2, el: 0.95},
+    CollisionCenter{rp: cf32::new(-1.0,  4.0), rad:1.2, el: 0.95},
+    CollisionCenter{rp: cf32::new( 1.0,  4.0), rad:1.2, el: 0.95},
+    CollisionCenter{rp: cf32::new( 3.0,  4.0), rad:1.2, el: 0.95},
+    CollisionCenter{rp: cf32::new( 4.0,  3.0), rad:1.2, el: 0.95},
+    CollisionCenter{rp: cf32::new( 4.0,  1.0), rad:1.2, el: 0.95},
+    CollisionCenter{rp: cf32::new( 4.0, -1.0), rad:1.2, el: 0.95},
+    CollisionCenter{rp: cf32::new( 4.0, -3.0), rad:1.2, el: 0.95},
+    CollisionCenter{rp: cf32::new( 3.0, -4.0), rad:1.2, el: 0.95},
+    CollisionCenter{rp: cf32::new( 1.0, -4.0), rad:1.2, el: 0.95},
+    CollisionCenter{rp: cf32::new(-1.0, -4.0), rad:1.2, el: 0.95},
+    CollisionCenter{rp: cf32::new(-3.0, -4.0), rad:1.2, el: 0.95},
+    CollisionCenter{rp: cf32::new(-4.0, -3.0), rad:1.2, el: 0.95},
+    CollisionCenter{rp: cf32::new(-4.0, -1.0), rad:1.2, el: 0.95},
+    CollisionCenter{rp: cf32::new(-4.0,  1.0), rad:1.2, el: 0.95},
+    CollisionCenter{rp: cf32::new(-4.0,  3.0), rad:1.2, el: 0.95},
+];
+impl TileType for JumpyTile {
+    fn collision_configuration(self) -> &'static [CollisionCenter] {
+        &JUMPYTILE
+    }
+    fn sprite(self) -> Option<&'static [u8; 8]> {
+        Some(&sprites::JUMPYTILE)
+    }
+}
+
 #[enum_dispatch::enum_dispatch]
 #[derive(Clone, Copy)]
 pub enum TileTypeEnum {
     EmptyTile,
     UsualArea1Tile,
+    JumpyTile,
 }
 

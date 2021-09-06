@@ -45,12 +45,23 @@ impl Area {
             chr: b'S',
             upper: LowlevelCellType::Special,
             lower: LowlevelCellType::Empty,
-        }];
+        },
+        CharDescription{
+            chr: b'J',
+            upper: LowlevelCellType::Empty,
+            lower: LowlevelCellType::CustomA,
+        },
+        CharDescription{
+            chr: b'j',
+            upper: LowlevelCellType::CustomA,
+            lower: LowlevelCellType::Solid,
+        },
+        ];
         let (rooms, specials) = utils::makearea(s, char_lookup);
         let meta = [RoomMetadata {
             block_type_sp: TileTypeEnum::EmptyTile(tiles::EmptyTile),
             block_type_x: TileTypeEnum::UsualArea1Tile(tiles::UsualArea1Tile),
-            block_type_a: TileTypeEnum::EmptyTile(tiles::EmptyTile),
+            block_type_a: TileTypeEnum::JumpyTile(tiles::JumpyTile),
             block_type_b: TileTypeEnum::EmptyTile(tiles::EmptyTile),
         }; 32];
         let mut player_starting_point = None;

@@ -13,7 +13,7 @@ Items grant features.
 * macros - fast travel between areas by "recording and replaying" moves
 * no_std - smaller collision radius
 * --release - higher jumps
-* try operator - wall climb
+* try operator - wall climb. Try trait v2 - ceiling climb
 
 More actions and action combinators allow more movement freedom and access to more areas. There is tuning menu to input sequence of things.
 
