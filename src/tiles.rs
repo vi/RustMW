@@ -9,9 +9,11 @@ pub struct CollisionCenter {
     pub el: f32,
 }
 
+
+#[enum_dispatch::enum_dispatch(TileTypes)]
 pub trait TileType {
-    fn collision_configuration() -> &'static [CollisionCenter];
-    fn sprite() -> &'static [u8; 8];
+    fn collision_configuration(&self) -> &'static [CollisionCenter];
+    fn sprite(&self) -> &'static [u8; 8];
 }
 
 pub struct UsualArea1Tile;
@@ -36,11 +38,16 @@ static SQUARE_TILE : [CollisionCenter; 16] = [
 ];
 
 impl TileType for UsualArea1Tile {
-    fn collision_configuration() -> &'static [CollisionCenter] {
+    fn collision_configuration(&self) -> &'static [CollisionCenter] {
         &SQUARE_TILE
     }
 
-    fn sprite() -> &'static [u8; 8] {
+    fn sprite(&self) -> &'static [u8; 8] {
         &sprites::SOLIDTILE
     }
+}
+
+#[enum_dispatch::enum_dispatch]
+pub enum TileTypes {
+    UsualArea1Tile,
 }

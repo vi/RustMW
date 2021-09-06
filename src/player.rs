@@ -1,5 +1,5 @@
 
-use crate::tiles::{TileType, UsualArea1Tile};
+use crate::tiles::{TileType, TileTypes, UsualArea1Tile};
 use crate::{Camera, cf32};
 use crate::wasm4::{BLIT_1BPP, BUTTON_2, BUTTON_DOWN, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_UP, SCREEN_SIZE, blit, line};
 use crate::World;
@@ -194,7 +194,8 @@ impl Player {
                 if x == myx && y == myy { continue }
                 let lowlevel_tile_type = r.get_tile(x, y);
                 if lowlevel_tile_type != 0 {
-                    for cp in UsualArea1Tile::collision_configuration() {
+                    let tile : TileTypes = UsualArea1Tile.into();
+                    for cp in tile.collision_configuration() {
                         let pos = World::from_world_coords((x,y)) + cp.rp;
                         self.repel_point(pos, cp.rad, cp.el, acceleration);
                     }
