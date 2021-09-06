@@ -17,22 +17,22 @@ pub trait TileType {
 pub struct UsualArea1Tile;
 
 static SQUARE_TILE : [CollisionCenter; 16] = [
-    CollisionCenter{rp: cf32::new(-3.0,  4.0), rad:1.0, el: 0.1},
-    CollisionCenter{rp: cf32::new(-1.0,  4.0), rad:1.0, el: 0.1},
-    CollisionCenter{rp: cf32::new( 1.0,  4.0), rad:1.0, el: 0.1},
-    CollisionCenter{rp: cf32::new( 3.0,  4.0), rad:1.0, el: 0.1},
-    CollisionCenter{rp: cf32::new( 4.0,  3.0), rad:1.0, el: 0.1},
-    CollisionCenter{rp: cf32::new( 4.0,  1.0), rad:1.0, el: 0.1},
-    CollisionCenter{rp: cf32::new( 4.0, -1.0), rad:1.0, el: 0.1},
-    CollisionCenter{rp: cf32::new( 4.0, -3.0), rad:1.0, el: 0.1},
-    CollisionCenter{rp: cf32::new( 3.0, -4.0), rad:1.0, el: 0.1},
-    CollisionCenter{rp: cf32::new( 1.0, -4.0), rad:1.0, el: 0.1},
-    CollisionCenter{rp: cf32::new(-1.0, -4.0), rad:1.0, el: 0.1},
-    CollisionCenter{rp: cf32::new(-3.0, -4.0), rad:1.0, el: 0.1},
-    CollisionCenter{rp: cf32::new(-4.0, -3.0), rad:1.0, el: 0.1},
-    CollisionCenter{rp: cf32::new(-4.0, -1.0), rad:1.0, el: 0.1},
-    CollisionCenter{rp: cf32::new(-4.0,  1.0), rad:1.0, el: 0.1},
-    CollisionCenter{rp: cf32::new(-4.0,  3.0), rad:1.0, el: 0.1},
+    CollisionCenter{rp: cf32::new(-3.0,  4.0), rad:1.2, el: 0.01},
+    CollisionCenter{rp: cf32::new(-1.0,  4.0), rad:1.2, el: 0.01},
+    CollisionCenter{rp: cf32::new( 1.0,  4.0), rad:1.2, el: 0.01},
+    CollisionCenter{rp: cf32::new( 3.0,  4.0), rad:1.2, el: 0.01},
+    CollisionCenter{rp: cf32::new( 4.0,  3.0), rad:1.2, el: 0.01},
+    CollisionCenter{rp: cf32::new( 4.0,  1.0), rad:1.2, el: 0.01},
+    CollisionCenter{rp: cf32::new( 4.0, -1.0), rad:1.2, el: 0.01},
+    CollisionCenter{rp: cf32::new( 4.0, -3.0), rad:1.2, el: 0.01},
+    CollisionCenter{rp: cf32::new( 3.0, -4.0), rad:1.2, el: 0.01},
+    CollisionCenter{rp: cf32::new( 1.0, -4.0), rad:1.2, el: 0.01},
+    CollisionCenter{rp: cf32::new(-1.0, -4.0), rad:1.2, el: 0.01},
+    CollisionCenter{rp: cf32::new(-3.0, -4.0), rad:1.2, el: 0.01},
+    CollisionCenter{rp: cf32::new(-4.0, -3.0), rad:1.2, el: 0.01},
+    CollisionCenter{rp: cf32::new(-4.0, -1.0), rad:1.2, el: 0.01},
+    CollisionCenter{rp: cf32::new(-4.0,  1.0), rad:1.2, el: 0.01},
+    CollisionCenter{rp: cf32::new(-4.0,  3.0), rad:1.2, el: 0.01},
 ];
 
 impl TileType for UsualArea1Tile {

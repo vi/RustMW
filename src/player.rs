@@ -172,7 +172,7 @@ impl Player {
                 if scale < 0.3*elasticity {
                     scale = 0.0;
                 }
-            } else if accelerating < -0.01 {
+            } else if accelerating < -0.02 {
                 scale *= -accelerating; // prevent lateral forces
                 if scale < 0.01 {
                     scale = 0.0;
