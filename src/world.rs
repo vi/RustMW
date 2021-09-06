@@ -1,5 +1,5 @@
 
-use crate::{camera::Camera, cf32, level, sprites, utils::draw_colours, wasm4::{SCREEN_SIZE, blit}};
+use crate::{camera::Camera, cf32, level, tiles::{self, TileTypeEnum, TileType}, utils::draw_colours, wasm4::{SCREEN_SIZE, blit}};
 
 pub struct World {   
 }
@@ -17,7 +17,7 @@ impl World {
         let miny = camy.saturating_sub(9);
         for y in miny..(miny+19) {
             for x in minx..(minx+19) {
-                if self.get_tile(x,y) != 0 {
+                if let Some(sprite) =  self.get_tile(x,y).sprite() {
                     let mut col = 2;
                     if (player_coords.0 as i32 - x as i32).abs() <= 1 && (player_coords.1 as i32 - y as i32).abs() <= 1  {
                         col = 4;
@@ -27,15 +27,15 @@ impl World {
                         continue;
                     }
                     draw_colours(col, 0, 0, 0);
-                    blit(&sprites::SOLIDTILE, upperleft.re as i32, upperleft.im as i32, 8, 8, 0);
+                    blit(sprite, upperleft.re as i32, upperleft.im as i32, 8, 8, 0);
                 }
             }
         }
     }
 
-    pub fn get_tile(&self, x: u16, y: u16) -> u8 {
+    pub fn get_tile(&self, x: u16, y: u16) -> TileTypeEnum {
         if x >= 16*8 || y >= 16*4 {
-            return 0;
+            return tiles::EmptyTile.into();
         }
 
         let room_x = x >> 4;
@@ -44,7 +44,12 @@ impl World {
         let within_room_y = y & 0xF;
 
 
-        ((level::AREA1.rooms[(room_y*8+room_x) as usize][within_room_y as usize] >> (within_room_x as usize*2)) & 0b11) as u8
+        let lowlevel_tile_type = ((level::AREA1.rooms[(room_y*8+room_x) as usize][within_room_y as usize] >> (within_room_x as usize*2)) & 0b11) as u8;
+        match lowlevel_tile_type {
+            0 => tiles::EmptyTile.into(),
+            1 => tiles::UsualArea1Tile.into(),
+            _ => todo!(),
+        }
     }
 
     pub fn from_world_coords((x,y): (u16, u16)) -> cf32 {
