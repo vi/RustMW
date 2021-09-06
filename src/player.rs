@@ -1,4 +1,5 @@
 
+use crate::tiles::{TileType, UsualArea1Tile};
 use crate::{Camera, cf32};
 use crate::wasm4::{BLIT_1BPP, BUTTON_2, BUTTON_DOWN, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_UP, SCREEN_SIZE, blit, line};
 use crate::World;
@@ -110,8 +111,8 @@ impl Player {
             self.anim_timer += std::num::Wrapping(1);
         }
     }
-    fn repel_point(&mut self, p : cf32, acceleration: &mut cf32) {
-        let mut v =  self.pos - p;
+    fn repel_point(&mut self, pos : cf32, additional_radius: f32, elasticity: f32, acceleration: &mut cf32) {
+        let mut v =  self.pos - pos;
         let vn = v.norm();
         
         /*
@@ -127,7 +128,8 @@ impl Player {
         );
         */
 
-        let radius = 5.0;
+        let mut radius = 3.0;
+        radius += additional_radius;
 
         if vn < radius+3.0 {
             v = v.unscale(vn);
@@ -135,65 +137,48 @@ impl Player {
             let accelerating = (veldir / v).re;
             //traceln!("accel {}", (accelerating*100.0) as i32);
             let fade = 1.0 - (vn - radius)/3.0;
-            if fade > 0.01 && v.im < -0.5 {
+
+            if fade > 0.01 && v.im < -0.5 && accelerating.abs() > 0.4 {
                 self.grounded = true;
             }
+
             //traceln!("fade {}", (fade*100.0) as i32);
             let mut scale = if vn <= 5.0 { 1.0 } else { fade * fade  };
-            if accelerating < 0.0 {
-                scale *= 10.0;
-            } 
+            scale *= 10.0;
+            if accelerating > 0.01 {
+                scale *= accelerating; // prevent lateral forces
+                scale *= elasticity;
+                if scale < 0.3*elasticity {
+                    scale = 0.0;
+                }
+            } else if accelerating < -0.01 {
+                scale *= -accelerating; // prevent lateral forces
+                if scale < 0.01 {
+                    scale = 0.0;
+                }
+            }
             *acceleration += v.scale(scale);
         }
     }
     pub fn handle_collisions(&mut self, r: &World, acceleration: &mut cf32 ) {
         //rp(cf32::new(70.0, 100.0));
         //return;
-        let fwc = World::from_world_coords;
-        let (x,y) = self.my_world_coords();
-        let mut rp = |p|self.repel_point(p, acceleration);
-        if x > 0 && y > 0 && r.get_tile(x-1, y-1) != 0 {
-            rp(fwc((x-1, y-1))+ cf32::new(2.0, 4.0));
-            rp(fwc((x-1, y-1))+ cf32::new(4.0, 2.0));
-            rp(fwc((x-1, y-1))+ cf32::new(4.0, 4.0));
-        }
-        if y > 0 && r.get_tile(x, y-1) != 0 {
-            rp(fwc((x, y-1))+ cf32::new(-4.0, 4.0));
-            rp(fwc((x, y-1))+ cf32::new(0.0, 4.0));
-            rp(fwc((x, y-1))+ cf32::new(4.0, 4.0));
-        }
-        if y > 0 && r.get_tile(x+1, y-1) != 0 {
-            rp(fwc((x+1, y-1))+ cf32::new(-1.0, 4.0));
-            rp(fwc((x+1, y-1))+ cf32::new(-3.0, 2.0));
-            rp(fwc((x+1, y-1))+ cf32::new(-3.0, 4.0));
-        }
+        let (myx,myy) = self.my_world_coords();
 
-        if x > 0 && r.get_tile(x-1, y) != 0 {
-            rp(fwc((x-1, y))+ cf32::new( 4.0, -4.0));
-            rp(fwc((x-1, y))+ cf32::new( 4.0, 0.0));
-            rp(fwc((x-1, y))+ cf32::new( 4.0, 4.0));
-        }
-        if  r.get_tile(x+1, y) != 0 {
-            rp(fwc((x+1, y))+ cf32::new( -2.0, -4.0));
-            rp(fwc((x+1, y))+ cf32::new( -2.0, 0.0));
-            rp(fwc((x+1, y))+ cf32::new( -2.0, 4.0));
-        }
+        let xx = myx.saturating_sub(1);
+        let yy = myy.saturating_sub(1);
 
-
-        if x > 0 && r.get_tile(x-1, y+1) != 0 {
-            rp(fwc((x-1, y+1))+ cf32::new(2.0, -2.0));
-            rp(fwc((x-1, y+1))+ cf32::new(4.0, -0.0));
-            rp(fwc((x-1, y+1))+ cf32::new(4.0, -2.0));
-        }
-        if r.get_tile(x, y+1) != 0 {
-            rp(fwc((x, y+1))+ cf32::new(-4.0, -2.0));
-            rp(fwc((x, y+1))+ cf32::new(0.0, -2.0));
-            rp(fwc((x, y+1))+ cf32::new(4.0, -2.0));
-        }
-        if r.get_tile(x+1, y+1) != 0 {
-            rp(fwc((x+1, y+1))+ cf32::new(-1.0, -2.0));
-            rp(fwc((x+1, y+1))+ cf32::new(-3.0,  -0.0));
-            rp(fwc((x+1, y+1))+ cf32::new(-3.0, -2.0));
+        for y in yy..(yy+3) {
+            for x in xx..(xx+3) {
+                if x == myx && y == myy { continue }
+                let lowlevel_tile_type = r.get_tile(x, y);
+                if lowlevel_tile_type != 0 {
+                    for cp in UsualArea1Tile::collision_configuration() {
+                        let pos = World::from_world_coords((x,y)) + cp.rp;
+                        self.repel_point(pos, cp.rad, cp.el, acceleration);
+                    }
+                }
+            }
         }
     }
     pub fn movement(&mut self, acceleration: &mut cf32) {

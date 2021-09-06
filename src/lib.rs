@@ -6,6 +6,7 @@ mod sprites;
 mod level;
 mod camera;
 mod player;
+mod tiles;
 mod world;
 
 use camera::Camera;
