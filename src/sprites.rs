@@ -80,3 +80,16 @@ pub static JUMPYTILE: [u8; 8] = sprite8x8(
     X . X . X . X .
 ",
 );
+
+pub static LADDER1: [u8; 8] = sprite8x8(
+    "
+    . . . . . . . .
+    X . . . . . . .
+    . X . . . . . .
+    X . X . . . . .
+    . X . X . . . .
+    X . X . X . . .
+    . X . X . X . .
+    X . X . X . X .
+",
+);

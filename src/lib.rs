@@ -56,13 +56,23 @@ impl Area {
             upper: LowlevelCellType::CustomA,
             lower: LowlevelCellType::Solid,
         },
+        CharDescription{
+            chr: b'l',
+            upper: LowlevelCellType::Empty,
+            lower: LowlevelCellType::CustomB,
+        },
+        CharDescription{
+            chr: b'L',
+            upper: LowlevelCellType::CustomB,
+            lower: LowlevelCellType::Solid,
+        },
         ];
         let (rooms, specials) = utils::makearea(s, char_lookup);
         let meta = [RoomMetadata {
             block_type_sp: TileTypeEnum::EmptyTile(tiles::EmptyTile),
             block_type_x: TileTypeEnum::UsualArea1Tile(tiles::UsualArea1Tile),
             block_type_a: TileTypeEnum::JumpyTile(tiles::JumpyTile),
-            block_type_b: TileTypeEnum::EmptyTile(tiles::EmptyTile),
+            block_type_b: TileTypeEnum::Ladder1Tile(tiles::Ladder1Tile),
         }; 32];
         let mut player_starting_point = None;
 
