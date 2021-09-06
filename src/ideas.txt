@@ -12,6 +12,8 @@ Items grant features.
 * clippy - show hints and/or secret areas
 * macros - fast travel between areas by "recording and replaying" moves
 * no_std - smaller collision radius
+* --release - higher jumps
+* try operator - wall climb
 
 More actions and action combinators allow more movement freedom and access to more areas. There is tuning menu to input sequence of things.
 
