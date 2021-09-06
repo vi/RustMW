@@ -45,10 +45,13 @@ impl World {
 
 
         let lowlevel_tile_type = ((level::AREA1.rooms[(room_y*8+room_x) as usize][within_room_y as usize] >> (within_room_x as usize*2)) & 0b11) as u8;
+        let meta = level::AREA1.meta[(room_y*8+room_x) as usize];
         match lowlevel_tile_type {
-            0 => tiles::EmptyTile.into(),
-            1 => tiles::UsualArea1Tile.into(),
-            _ => todo!(),
+            0 => meta.block_type_sp,
+            1 => meta.block_type_x,
+            2 => meta.block_type_a,
+            3 => meta.block_type_b,
+            _ => unreachable!(),
         }
     }
 

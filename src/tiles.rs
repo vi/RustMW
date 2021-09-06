@@ -17,6 +17,7 @@ pub trait TileType {
 }
 
 
+#[derive(Clone, Copy)]
 pub struct EmptyTile;
 static EMRTY_TILE : [CollisionCenter; 0] = [];
 impl TileType for EmptyTile {
@@ -28,6 +29,8 @@ impl TileType for EmptyTile {
     }
 }
 
+
+#[derive(Clone, Copy)]
 pub struct UsualArea1Tile;
 static SQUARE_TILE : [CollisionCenter; 16] = [
     CollisionCenter{rp: cf32::new(-3.0,  4.0), rad:1.2, el: 0.01},
@@ -57,7 +60,9 @@ impl TileType for UsualArea1Tile {
 }
 
 #[enum_dispatch::enum_dispatch]
+#[derive(Clone, Copy)]
 pub enum TileTypeEnum {
     EmptyTile,
     UsualArea1Tile,
 }
+

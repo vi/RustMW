@@ -1,4 +1,5 @@
 mod wasm4;
+use tiles::TileTypeEnum;
 use wasm4::*;
 
 pub mod utils;
@@ -23,10 +24,10 @@ type RoomData = [u32; 16];
 
 #[derive(Clone, Copy)]
 struct RoomMetadata {
-    block_type_sp: u8,
-    block_type_x: u8,
-    block_type_a: u8,
-    block_type_b: u8,
+    block_type_sp: TileTypeEnum,
+    block_type_x: TileTypeEnum,
+    block_type_a: TileTypeEnum,
+    block_type_b: TileTypeEnum,
 }
 
 // 8x4 block of rooms
@@ -47,10 +48,10 @@ impl Area {
         }];
         let (rooms, specials) = utils::makearea(s, char_lookup);
         let meta = [RoomMetadata {
-            block_type_sp: 0,
-            block_type_x: 1,
-            block_type_a: 2,
-            block_type_b: 3,
+            block_type_sp: TileTypeEnum::EmptyTile(tiles::EmptyTile),
+            block_type_x: TileTypeEnum::UsualArea1Tile(tiles::UsualArea1Tile),
+            block_type_a: TileTypeEnum::EmptyTile(tiles::EmptyTile),
+            block_type_b: TileTypeEnum::EmptyTile(tiles::EmptyTile),
         }; 32];
         let mut player_starting_point = None;
 
