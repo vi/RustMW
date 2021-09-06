@@ -13,6 +13,7 @@ pub struct Player {
 
     pub power: f32,
     pub jump_dir: Option<f32>,
+    remembered_jump : u8,
     pub grounded: bool,
 }
 
@@ -25,6 +26,7 @@ impl Player {
             anim_timer: std::num::Wrapping(0),
             grounded: false,
             jump_dir: None,
+            remembered_jump: 0,
         }
     }
     pub fn jump_strength(cur: u8) -> f32 {
@@ -41,6 +43,7 @@ impl Player {
         let mut dir = cf32::new(0.0, 0.0);
         let mut movpower : f32 = 0.0;
 
+        let mut do_jump_now = false;
         if prev & BUTTON_2 != 0 {
             self.jump_dir = Some(self.jump_dir.unwrap_or_default());
             let jump_dir = self.jump_dir.as_mut().unwrap();
@@ -51,16 +54,14 @@ impl Player {
                 *jump_dir += 0.03;
             }
             *jump_dir = jump_dir.clamp(-1.0, 1.0);
-            if self.grounded && cur & BUTTON_2 == 0 {
-                // trigger the jump
-                dir = cf32::new(self.jump_dir.unwrap(), -1.0);
-                let strength = Player::jump_strength(cur);
-                movpower = self.power * strength;
-                self.jump_dir = None;
+            if cur & BUTTON_2 == 0  {
+                if self.grounded && self.vel.im < 0.001 {
+                    do_jump_now = true;
+                } else {
+                    self.remembered_jump = 12;
+                }
             }
         } else {
-            self.jump_dir = None;
-
             let mut brake = false;
 
             if cur & BUTTON_LEFT != 0 {
@@ -90,6 +91,26 @@ impl Player {
                 dir = -self.vel;
                 movpower = self.power / 5.0;
             }
+        }
+
+        if self.remembered_jump > 0 {
+            if self.grounded && self.vel.im < 0.0 {
+                do_jump_now = true;
+            }
+            self.remembered_jump -= 1;
+        } else {
+            if prev & BUTTON_2 == 0 {
+                self.jump_dir = None;
+            }
+
+        }
+
+        if do_jump_now {
+            dir = cf32::new(self.jump_dir.unwrap(), -1.0);
+            let strength = Player::jump_strength(cur);
+            movpower = self.power * strength;
+            self.jump_dir = None;
+            self.remembered_jump = 0;
         }
 
         let dirnorm = dir.norm();
