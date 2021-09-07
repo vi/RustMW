@@ -168,14 +168,15 @@ impl Player {
         */
 
         let mut radius = 3.0;
+        let feather = 3.0;
         radius += additional_radius;
 
-        if vn < radius+3.0 {
+        if vn < radius+feather {
             v = v.unscale(vn);
             let veldir = self.vel.unscale(self.vel.norm());
             let accelerating = (veldir / v).re;
             //traceln!("accel {}", (accelerating*100.0) as i32);
-            let fade = 1.0 - (vn - radius)/3.0;
+            let fade = 1.0 - (vn - radius)/feather;
 
             if fade > 0.01 && v.im < -0.5 && accelerating.abs() > 0.4 {
                 self.grounded = true;
@@ -183,7 +184,7 @@ impl Player {
             }
 
             //traceln!("fade {}", (fade*100.0) as i32);
-            let mut scale = if vn <= 5.0 { 1.0 } else { fade * fade  };
+            let mut scale = if vn <= radius { 1.0 } else { fade * fade  };
             scale *= 10.0;
             if accelerating > 0.01 {
                 scale *= accelerating; // prevent lateral forces
