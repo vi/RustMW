@@ -15,6 +15,7 @@ pub struct Player {
     pub jump_dir: Option<f32>,
     remembered_jump : u8,
     pub grounded: bool,
+    pub ground_force_direction: cf32,
 }
 
 impl Player {
@@ -27,6 +28,7 @@ impl Player {
             grounded: false,
             jump_dir: None,
             remembered_jump: 0,
+            ground_force_direction: cf32::new(0.0, -1.0),
         }
     }
     pub fn jump_strength(cur: u8) -> f32 {
@@ -64,20 +66,36 @@ impl Player {
         } else {
             let mut brake = false;
 
-            if cur & BUTTON_LEFT != 0 {
-                dir.re -= 1.0;
-            }
-            if cur & BUTTON_RIGHT != 0 {
-                dir.re += 1.0;
-            }
-            if cur & BUTTON_UP != 0 {
-                dir.im -= 1.0;
-            }
-            if cur & BUTTON_DOWN != 0 {
-                if self.grounded {
-                    brake = true;
-                } else {
+            if !self.grounded {
+                if cur & BUTTON_LEFT != 0 {
+                    dir.re -= 1.0;
+                }
+                if cur & BUTTON_RIGHT != 0 {
+                    dir.re += 1.0;
+                }
+                if cur & BUTTON_UP != 0 {
+                    dir.im -= 1.0;
+                }
+                if cur & BUTTON_DOWN != 0 {
                     dir.im += 1.0;
+                }
+            } else {
+                // grounded
+                if cur & BUTTON_LEFT != 0 {
+                    //dir.re -= 1.0;
+                    //crate::traceln!("{} {}", (self.ground_force_direction.re * 10.0) as i32, (self.ground_force_direction.im * 10.0) as i32);
+                    dir += self.ground_force_direction * cf32::new(0.0, -1.0);
+                }
+                if cur & BUTTON_RIGHT != 0 {
+                    //dir.re += 1.0;
+                    //crate::traceln!("{} {}", (self.ground_force_direction.re * 10.0) as i32, (self.ground_force_direction.im * 10.0) as i32);
+                    dir -= self.ground_force_direction * cf32::new(0.0, -1.0);
+                }
+                if cur & BUTTON_UP != 0 {
+                    //dir.im -= 1.0;
+                }
+                if cur & BUTTON_DOWN != 0 {
+                    brake = true;
                 }
             }
 
@@ -161,6 +179,7 @@ impl Player {
 
             if fade > 0.01 && v.im < -0.5 && accelerating.abs() > 0.4 {
                 self.grounded = true;
+                self.ground_force_direction += v * fade * fade;
             }
 
             //traceln!("fade {}", (fade*100.0) as i32);

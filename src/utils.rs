@@ -278,13 +278,13 @@ impl<const N:usize> ufmt::uWrite for UfmtBuf<N> {
 macro_rules! traceln {
     ($fmt:literal, $($args:tt)*) => {
         {
-            let mut buf = UfmtBuf::<30>::new();
+            let mut buf = crate::utils::UfmtBuf::<30>::new();
             let _ = ::ufmt::uwrite!(
                 buf,
                 $fmt,
                 $($args)*
             );
-            trace(buf.as_str());
+            crate::wasm4::trace(buf.as_str());
         }
     }
 }
