@@ -218,7 +218,7 @@ impl Player {
             }
         }
 
-        let mut radius = 3.5;
+        let mut radius = 1.5;
         let feather = 3.0;
         radius += chosen_segment.rad;
 

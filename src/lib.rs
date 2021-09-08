@@ -41,32 +41,8 @@ pub struct Area {
 
 impl Area {
     const fn new(s: &'static [u8]) -> Area {
-        let char_lookup = [CharDescription {
-            chr: b'S',
-            upper: LowlevelCellType::Special,
-            lower: LowlevelCellType::Empty,
-        },
-        CharDescription{
-            chr: b'J',
-            upper: LowlevelCellType::Empty,
-            lower: LowlevelCellType::CustomA,
-        },
-        CharDescription{
-            chr: b'j',
-            upper: LowlevelCellType::CustomA,
-            lower: LowlevelCellType::Solid,
-        },
-        CharDescription{
-            chr: b'l',
-            upper: LowlevelCellType::Empty,
-            lower: LowlevelCellType::CustomB,
-        },
-        CharDescription{
-            chr: b'L',
-            upper: LowlevelCellType::CustomB,
-            lower: LowlevelCellType::Solid,
-        },
-        ];
+        let char_lookup = utils::ll_char_descriptions::<5>(b"S!. J.A jAX l.B LBX");
+       
         let (rooms, specials) = utils::makearea(s, char_lookup);
         let meta = [RoomMetadata {
             block_type_sp: TileTypeEnum::EmptyTile(tiles::EmptyTile),
@@ -211,7 +187,7 @@ impl State {
             
             let vel_estimate1 = self.player.vel.norm();
             let vel_estimate2 = (self.player.vel + acceleration*2.0).norm();
-            let vel_estimate = vel_estimate1.max(vel_estimate2) / 2000.0;
+            let vel_estimate = vel_estimate1.max(vel_estimate2  ) / 2000.0;
 
             // aim to move do 5 iterations of collision calculations per pixel of movement
             let mut epsilon = 0.2 / vel_estimate;

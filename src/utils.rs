@@ -288,3 +288,57 @@ macro_rules! traceln {
         }
     }
 }
+
+pub const fn ll_char_descriptions<const N: usize>(specifier: &'static [u8]) -> [CharDescription; N] {
+    let mut v = [CharDescription{chr: b'?', upper: LowlevelCellType::Empty, lower: LowlevelCellType::Empty}; N];
+    let mut i = 0;
+    let mut j = 0;
+    
+    enum S {
+        Idle,
+        Upper,
+        Lower,
+    }
+    let mut s = S::Idle;
+    while i < specifier.len() {
+        s = match s{
+            S::Idle =>  match specifier[i] {
+                b' ' | b'\n' | b'\t' => S::Idle,
+                x => {
+                    v[j].chr = x;
+                    S::Upper
+                }
+            },
+            S::Upper | S::Lower => {
+                let t = match specifier[i] {
+                    b'.' => LowlevelCellType::Empty,
+                    b'X' => LowlevelCellType::Solid,
+                    b'A' => LowlevelCellType::CustomA,
+                    b'B' => LowlevelCellType::CustomB,
+                    b'!' => LowlevelCellType::Special,
+                    _ => {
+                        b"Invalid low-level cell type letter"[999];
+                        LowlevelCellType::Empty
+                    }
+                };
+                match s {
+                    S::Idle => S::Idle, // actually unreachable!(),
+                    S::Upper => {
+                        v[j].upper = t;
+                        S::Lower
+                    }
+                    S::Lower => {
+                        v[j].lower = t;
+                        j+=1;
+                        S::Idle
+                    }
+                }
+            }
+        };
+        i+=1;
+    }
+    if j != v.len() {
+        b"Mismatch between declared length of low-level cell types and actual number of letter triplets"[999];
+    }
+    v
+}
