@@ -197,20 +197,38 @@ impl State {
 
         self.player.control(self.prevpad, gamepad);
 
-        const ITERS : usize = 20;
-        for _ in 0..ITERS {
-            let epsilon = 10.0 / ITERS as f32;
+        #[allow(unused_variables)]
+        let mut iterations_counter = 0;
+        let mut remaining_movement_units = 10.0;
+        while remaining_movement_units > 0.0 {
             self.player.grounded = false;
-
+            
             //self.player.ground_force_direction += cf32::new(0.0, -0.02);
-
+            
             let mut acceleration = cf32::new(0.0, 0.0);
             self.player.handle_collisions(&self.room, &mut acceleration);
             self.player.movement(&mut acceleration);
+            
+            let vel_estimate1 = self.player.vel.norm();
+            let vel_estimate2 = (self.player.vel + acceleration*2.0).norm();
+            let vel_estimate = vel_estimate1.max(vel_estimate2) / 2000.0;
+
+            // aim to move do 5 iterations of collision calculations per pixel of movement
+            let mut epsilon = 0.2 / vel_estimate;
+
+            epsilon = epsilon.min(1.0/acceleration.norm());
+            epsilon = epsilon.max(0.1);
+            epsilon = epsilon.min(remaining_movement_units);
+
+            //crate::traceln!("  accel {} epsilon {}", (acceleration.norm() * 100.0) as i32, (epsilon * 100.0) as i32);
 
             self.player.vel += epsilon * acceleration;
             self.player.pos += epsilon * self.player.vel / 2000.0;
+
+            remaining_movement_units -= epsilon;
+            iterations_counter += 1;
         }
+        //crate::traceln!("iters {}", iterations_counter);
 
         self.textbox.control(self.prevpad, gamepad);
 
