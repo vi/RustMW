@@ -197,11 +197,11 @@ impl State {
 
         self.player.control(self.prevpad, gamepad);
 
-        for _ in 0..10 {
-            let epsilon = 1.0;
+        const ITERS : usize = 20;
+        for _ in 0..ITERS {
+            let epsilon = 10.0 / ITERS as f32;
             self.player.grounded = false;
 
-            self.player.ground_force_direction = self.player.ground_force_direction.scale(0.5);
             //self.player.ground_force_direction += cf32::new(0.0, -0.02);
 
             let mut acceleration = cf32::new(0.0, 0.0);
@@ -210,7 +210,6 @@ impl State {
 
             self.player.vel += epsilon * acceleration;
             self.player.pos += epsilon * self.player.vel / 2000.0;
-            self.player.ground_force_direction = self.player.ground_force_direction.unscale(self.player.ground_force_direction.norm());
         }
 
         self.textbox.control(self.prevpad, gamepad);
