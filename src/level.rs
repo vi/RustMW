@@ -17,8 +17,8 @@ pub const AREA1: (Area, SpecialPositions) = Area::build(b"                      
 |` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           |
 |        `               `               `               `               `               `               `               `       |
 |XXXX       ,     XXX                            XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    |
-|XXXX                                            XXXX            XXXX            XXXX            XXXX            XXXX            |
-|X                                                              XX              XX              XX              XX              X|
+|XXXX     S                                      XXXX            XXXX            XXXX            XXXX            XXXX            |
+|X                                                          !   XX              XX              XX              XX              X|
 |X   ,``  `,    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX````X  X  XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    X|
 |X ,`           XX ,`           XX ,`           XX ,`     X  X  XX ,`           XX ,`           XX ,`           XX ,`           X|
 |XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXX  XJJXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXX|
@@ -31,7 +31,7 @@ pub const AREA1: (Area, SpecialPositions) = Area::build(b"                      
 |X ,`           XX ,`           XX ,`                     X  X  XX ,`    XXXXXXXXXX  XXX XXXX   XX ,`           XX ,`           X|
 |XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXX,                 X,XXX  X XXXXXXXX,XXXXXXXXXXX    X XXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXX|
 |` ```           ` ```           XXX`            ` ```    X  X   ` ```   XXXXXXXXXXXX  X XXXX    ` ```           ` ```           |
-|        `               `       XXXXLl                S  X  X           XXXXXXXXXX    X XXXX            `               `       |
+|        `               `       XXXXLl                   X  X           XXXXXXXXXX    X XXXX            `               `       |
 |XXXX       ,    XXXX       ,    XXXXXXLl                 X  X                  `X  ,XXX XXXX    XXXX       ,    XXXX       ,    |
 |XXXX            XXXX            XXXXXXXXLl                      XXXX    XXXXXX     XXXX XXXX    XXXX            XXXX            |
 |X              XX              XX   XXXXXXLl                   XX       XXXXXXXXXX XXXX XXXX   XX              XX              X|

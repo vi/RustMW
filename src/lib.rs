@@ -48,32 +48,51 @@ struct Level {
 impl Level {
     pub const fn new() -> Level {
         let mut unique_items = [(UniqueItem::PlayerStart, (0,0)); UniqueItem::VARIANT_COUNT];
+        let mut prioritized = [false; UniqueItem::VARIANT_COUNT];
 
         let mut i = 0;
 
         let mut j = 0;
         let specials = level::AREA1.1;
         while j < specials.len() {
-            if let Some(SpecialPosition { chr, pos }) = specials[j] {
+            if let Some(SpecialPosition { chr, pos, mut priority}) = specials[j] {
                 let item = match chr {
                     b'S' => UniqueItem::PlayerStart,
+                    b'!' => {
+                        priority = true;
+                        UniqueItem::PlayerStart
+                    }
                     _ => {
                         b"Unknown special item"[999];
                         UniqueItem::PlayerStart
                     }
                 };
 
+                let mut insert_at_the_end = true;
+
                 let mut k = 0;
                 while k < i {
                     if unique_items[k].0 as u8== item as u8 {
-                        b"Duplicate unique item"[999];
+                        insert_at_the_end = false;
+                        match (priority, prioritized[k]) {
+                            (false, false) => {b"Duplicate position for an unique item"[999];}
+                            (false, true) => (), // silently ignore non-priority position when priority one is already set
+                            (true, false) => {
+                                unique_items[k].1 = pos;
+                                prioritized[k] = true;
+                            }
+                            (true, true) => {b"Duplicate priority position for an unique item"[999];}
+                        }
                     }
                     k+=1;
                 }
-
-                unique_items[i].0 = item;
-                unique_items[i].1 = pos;
-                i+=1;
+                
+                if insert_at_the_end {
+                    unique_items[i].0 = item;
+                    unique_items[i].1 = pos;
+                    prioritized[i] = priority;
+                    i+=1;
+                }
             }
             j += 1;
         }
@@ -85,6 +104,19 @@ impl Level {
             the_area: level::AREA1.0,
             unique_items,
         }
+    }
+
+    pub const fn unique_item_pos(&self, item: UniqueItem) -> TilePos {
+        let mut i=0;
+        while i < self.unique_items.len() {
+            if item as u8 == self.unique_items[i].0 as u8 {
+                return self.unique_items[i].1;
+            }
+            i+=1;
+        }
+        #[allow(unconditional_panic)]
+        b"Internal error: Level::new should have caught missing item position"[999];
+        (0,0)
     }
 }
 
@@ -99,7 +131,7 @@ static LEVEL : Level = Level::new();
 
 impl Area {
     const fn build(s: &'static [u8]) -> (Area, SpecialPositions) {
-        let char_lookup = utils::ll_char_descriptions::<5>(b"S!.      J.A      jAX      l.B      LBX     ");
+        let char_lookup = utils::ll_char_descriptions::<6>(b"S!.      J.A      jAX      l.B      LBX     !!.  ");
        
         let (rooms, specials) = utils::makearea(s, char_lookup);
         let meta = [RoomMetadata {
@@ -161,6 +193,9 @@ pub struct CharDescription {
 pub struct SpecialPosition {
     chr: u8,
     pos : TilePos,
+
+    /// For temporary position overrides during development
+    priority: bool,
 }
 
 struct TextBox {
@@ -222,14 +257,8 @@ impl State {
         let gamepad = unsafe { *GAMEPAD1 };
 
         if !self.player.pos.is_normal() {
-            for (item, pos) in LEVEL.unique_items {
-                if item == UniqueItem::PlayerStart {
-                    self.player.pos = World::from_world_coords(pos);
-                    self.camera.pos = self.player.pos;
-                    break;
-                }
-            }
-            return;
+            self.player.pos = World::from_world_coords(LEVEL.unique_item_pos(UniqueItem::PlayerStart));
+            self.camera.pos = self.player.pos;
         }
 
         self.player.control(self.prevpad, gamepad);
