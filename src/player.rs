@@ -1,6 +1,6 @@
 
 use crate::tiles::{CollisionSegment, TileType};
-use crate::{Camera, cf32};
+use crate::{Camera, TilePos, cf32};
 use crate::wasm4::{BLIT_1BPP, BUTTON_2, BUTTON_DOWN, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_UP, SCREEN_SIZE, blit, line};
 use crate::World;
 use crate::utils::draw_colours;
@@ -298,7 +298,7 @@ impl Player {
         for y in yy..(yy+3) {
             for x in xx..(xx+3) {
                 if x == myx && y == myy { continue }
-                let tiletype = r.get_tile(x, y);
+                let tiletype = r.get_tile((x, y));
                 self.repel_tile(World::from_world_coords((x,y)), tiletype.collision_configuration(), acceleration);
             }
         }
@@ -363,7 +363,7 @@ impl Player {
         }
     }
 
-    pub fn my_world_coords(&self) -> (u16, u16) {
+    pub fn my_world_coords(&self) -> TilePos {
         World::to_world_coords(self.pos)
     }
 }

@@ -1,5 +1,5 @@
 use crate::utils::{room16x16};
-use crate::{Area, RoomData};
+use crate::{Area, RoomData, SpecialPositions};
 
 
 const MAP: RoomData = room16x16( b"
@@ -13,7 +13,7 @@ const MAP: RoomData = room16x16( b"
 |XXXXXX,XXXXXXXXX|
 ");
 
-pub static AREA1: Area = Area::new(b"                                                                                                       <
+pub const AREA1: (Area, SpecialPositions) = Area::build(b"                                                                                                       <
 |` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           |
 |        `               `               `               `               `               `               `               `       |
 |XXXX       ,     XXX                            XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    |

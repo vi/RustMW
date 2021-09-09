@@ -192,16 +192,14 @@ pub const fn makearea<const N:usize>(s: &'static [u8], char_lookup:[CharDescript
                 if matches!(upper, Special) {
                     special_positions[special_position_index] = Some(SpecialPosition {
                         chr,
-                        x: cellidx,
-                        y: 2*lineidx,
+                        pos: (cellidx, 2*lineidx),
                     });
                     special_position_index+=1;
                 }
                 if matches!(lower, Special) {
                     special_positions[special_position_index] = Some(SpecialPosition {
                         chr,
-                        x: cellidx,
-                        y: 2*lineidx+1,
+                        pos: (cellidx, 2*lineidx+1),
                     });
                     special_position_index+=1;
                 }

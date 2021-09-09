@@ -24,32 +24,92 @@ type RoomData = [u32; 16];
 
 #[derive(Clone, Copy)]
 struct RoomMetadata {
-    block_type_sp: TileTypeEnum,
-    block_type_x: TileTypeEnum,
-    block_type_a: TileTypeEnum,
-    block_type_b: TileTypeEnum,
+    block_type_sp: Option<TileTypeEnum>,
+    block_type_x: Option<TileTypeEnum>,
+    block_type_a: Option<TileTypeEnum>,
+    block_type_b: Option<TileTypeEnum>,
 }
 
 // 8x4 block of rooms
 type RoomBlock = [RoomData; 32];
 
+#[derive(variant_count::VariantCount, PartialEq, Eq, Copy, Clone)]
+pub enum UniqueItem {
+    PlayerStart,
+}
+
+pub type TilePos = (u16, u16);
+
+struct Level {
+    the_area: Area,
+    unique_items: [(UniqueItem, TilePos); UniqueItem::VARIANT_COUNT],
+}
+
+impl Level {
+    pub const fn new() -> Level {
+        let mut unique_items = [(UniqueItem::PlayerStart, (0,0)); UniqueItem::VARIANT_COUNT];
+
+        let mut i = 0;
+
+        let mut j = 0;
+        let specials = level::AREA1.1;
+        while j < specials.len() {
+            if let Some(SpecialPosition { chr, pos }) = specials[j] {
+                let item = match chr {
+                    b'S' => UniqueItem::PlayerStart,
+                    _ => {
+                        b"Unknown special item"[999];
+                        UniqueItem::PlayerStart
+                    }
+                };
+
+                let mut k = 0;
+                while k < i {
+                    if unique_items[k].0 as u8== item as u8 {
+                        b"Duplicate unique item"[999];
+                    }
+                    k+=1;
+                }
+
+                unique_items[i].0 = item;
+                unique_items[i].1 = pos;
+                i+=1;
+            }
+            j += 1;
+        }
+        if i != UniqueItem::VARIANT_COUNT {
+            b"There is a missing unique item on the level"[999];
+        }
+
+        Level {
+            the_area: level::AREA1.0,
+            unique_items,
+        }
+    }
+}
+
+type SpecialPositions = [Option<SpecialPosition>; 32];
+
 pub struct Area {
     rooms: [RoomData; 32],
     meta: [RoomMetadata; 32],
-    player_starting_point: Option<(u16, u16)>,
 }
 
+static LEVEL : Level = Level::new();
+
 impl Area {
-    const fn new(s: &'static [u8]) -> Area {
-        let char_lookup = utils::ll_char_descriptions::<5>(b"S!. J.A jAX l.B LBX");
+    const fn build(s: &'static [u8]) -> (Area, SpecialPositions) {
+        let char_lookup = utils::ll_char_descriptions::<5>(b"S!.      J.A      jAX      l.B      LBX     ");
        
         let (rooms, specials) = utils::makearea(s, char_lookup);
         let meta = [RoomMetadata {
-            block_type_sp: TileTypeEnum::EmptyTile(tiles::EmptyTile),
-            block_type_x: TileTypeEnum::UsualArea1Tile(tiles::UsualArea1Tile),
-            block_type_a: TileTypeEnum::JumpyTile(tiles::JumpyTile),
-            block_type_b: TileTypeEnum::Ladder1Tile(tiles::Ladder1Tile),
+            block_type_sp: Some(TileTypeEnum::EmptyTile(tiles::EmptyTile)),
+            block_type_x: Some(TileTypeEnum::UsualArea1Tile(tiles::UsualArea1Tile)),
+            block_type_a: Some(TileTypeEnum::JumpyTile(tiles::JumpyTile)),
+            block_type_b: Some(TileTypeEnum::Ladder1Tile(tiles::Ladder1Tile)),
         }; 32];
+
+        /*
         let mut player_starting_point = None;
 
         let mut i = 0;
@@ -61,12 +121,12 @@ impl Area {
             }
             i += 1;
         }
+        */
 
-        Area {
+        (Area {
             rooms,
             meta,
-            player_starting_point,
-        }
+        }, specials)
     }
 }
 
@@ -100,8 +160,7 @@ pub struct CharDescription {
 #[derive(Clone, Copy)]
 pub struct SpecialPosition {
     chr: u8,
-    x: u16,
-    y: u16,
+    pos : TilePos,
 }
 
 struct TextBox {
@@ -163,12 +222,14 @@ impl State {
         let gamepad = unsafe { *GAMEPAD1 };
 
         if !self.player.pos.is_normal() {
-            if let Some(pos) = level::AREA1.player_starting_point {
-                self.player.pos = World::from_world_coords(pos);
-                self.camera.pos = self.player.pos;
-            } else {
-                return;
+            for (item, pos) in LEVEL.unique_items {
+                if item == UniqueItem::PlayerStart {
+                    self.player.pos = World::from_world_coords(pos);
+                    self.camera.pos = self.player.pos;
+                    break;
+                }
             }
+            return;
         }
 
         self.player.control(self.prevpad, gamepad);
