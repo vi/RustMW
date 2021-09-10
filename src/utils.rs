@@ -194,7 +194,7 @@ pub const fn room16x16(s: &'static [u8]) -> [u32; 16] {
     buf
 }
 
-use crate::{Area, AreaSource, CharDescription, Level, LowlevelCellType, MAX_UNIQUE_ITEM_POSITIONS, MappingBetweenCharAndItem, MappingBetweenCharAndTileType, RoomBlock, RoomMetadata, TilePos, UniqueItem, UniqueItemPosition, UniqueItemPositionLowlevel, UniqueItemPositions, level, tiles::{TileTypeEnum, tile_type_enum_eq}}; 
+use crate::{Area, AreaSource, CharDescription, Level, LowlevelCellType, MAX_UNIQUE_ITEMS_PER_ROOM, MAX_UNIQUE_ITEM_POSITIONS, MappingBetweenCharAndItem, MappingBetweenCharAndTileType, RoomBlock, RoomMetadata, TilePos, UniqueItem, UniqueItemPosition, UniqueItemPositionLowlevel, UniqueItemPositions, level, tiles::{TileTypeEnum, tile_type_enum_eq}}; 
 
 const fn lookup_char<const N:usize>(c: u8, char_lookup:[CharDescription; N]) -> CharDescription {
     let mut j = 0;
@@ -222,7 +222,26 @@ const fn lookup_tt<const N:usize>(c: u8, lookup:[MappingBetweenCharAndTileType; 
     }
 }
 
-pub const fn makearea<const C:usize, const T:usize, const I:usize>(src: AreaSource<C,T,I>) -> (RoomBlock, [Option<UniqueItemPositionLowlevel>; 32], [RoomMetadata; 32]) {
+const fn lookup_unique<const N:usize>(c: u8, lookup:[MappingBetweenCharAndItem; N]) -> (UniqueItem, bool) {
+    let mut j = 0;
+    while j < lookup.len() {
+        if lookup[j].chr == c {
+            return (lookup[j].item, lookup[j].priority);
+        }
+        j+=1;
+    }
+    loop{
+        b"Encountered unique item character that is not mapped to UniquItem"[999];
+    }
+}
+
+const fn makearea<const C:usize, const T:usize, const I:usize>(src: AreaSource<C,T,I>) 
+-> 
+(   RoomBlock, 
+    [Option<UniqueItemPositionLowlevel>; 32],
+    [RoomMetadata; 32],
+    [[Option<UniqueItem>; MAX_UNIQUE_ITEMS_PER_ROOM]; 32],
+) {
     let mut buf = [[0u32; 16]; 32];
     let mut special_positions = [None; 32];
     let mut special_position_index = 0;
@@ -241,6 +260,8 @@ pub const fn makearea<const C:usize, const T:usize, const I:usize>(src: AreaSour
         block_type_a: None,
         block_type_b: None,
     }; 32];
+
+    let mut uniques = [[None; MAX_UNIQUE_ITEMS_PER_ROOM]; 32];
 
     let mut i = 0;
     while i < s.len() {
@@ -284,6 +305,9 @@ pub const fn makearea<const C:usize, const T:usize, const I:usize>(src: AreaSour
                         match (info.upper, info.lower) {
                             (CustomA, CustomB) | (CustomB, CustomA) => {
                                 b"This combination of low-level cell types is not allowed"[999];
+                            }
+                            (Special, Special) => {
+                                b"Unique items cannot be vertically stacked as pairs"[999];
                             }
                             _ => (),
                         }
@@ -347,22 +371,38 @@ pub const fn makearea<const C:usize, const T:usize, const I:usize>(src: AreaSour
                 let within_room_x = cellidx % 16;
                 let within_room_y = lineidx % 8;
 
-                if matches!(upper, Special) {
-                    special_positions[special_position_index] = Some(UniqueItemPositionLowlevel {
-                        chr,
-                        pos: (cellidx, 2*lineidx),
-                        priority: false,
-                    });
+                if matches!(upper, Special)  || matches!(lower, Special) {
+                    if matches!(upper, Special) {
+                        special_positions[special_position_index] = Some(UniqueItemPositionLowlevel {
+                            chr,
+                            pos: (cellidx, 2*lineidx),
+                        });
+                    }
+                    if matches!(lower, Special) {
+                        special_positions[special_position_index] = Some(UniqueItemPositionLowlevel {
+                            chr,
+                            pos: (cellidx, 2*lineidx+1),
+                        });
+                    }
                     special_position_index+=1;
-                }
-                if matches!(lower, Special) {
-                    special_positions[special_position_index] = Some(UniqueItemPositionLowlevel {
-                        chr,
-                        pos: (cellidx, 2*lineidx+1),
-                        priority: false,
-                    });
-                    special_position_index+=1;
-                }
+
+
+                    let (item, _prio) = lookup_unique(chr, src.item_lookup);
+
+                    let mut k = 0;
+                    while k < uniques[roomidx].len() {
+                        if uniques[roomidx][k].is_none() {
+                            uniques[roomidx][k] = Some(item);
+                            break;
+                        }
+                        k+=1;
+                    }
+
+                    if k == uniques[roomidx].len() {
+                        b"Too many unique items in a room"[999];
+                    }
+                } 
+               
 
                 buf[roomidx][(2*within_room_y+0) as usize] |= (upper.ll_code() as u32) << (within_room_x*2);
                 buf[roomidx][(2*within_room_y+1) as usize] |= (lower.ll_code() as u32) << (within_room_x*2);
@@ -378,14 +418,14 @@ pub const fn makearea<const C:usize, const T:usize, const I:usize>(src: AreaSour
         b"There must by exactly 32 lines in each area"[999];
     }
 
-    (buf, special_positions, meta)
+    (buf, special_positions, meta, uniques)
 }
 
 
 impl Area {
     pub const fn build<const C: usize, const T: usize, const I:usize>(src: AreaSource<C,T,I>) -> (Area, UniqueItemPositions) {  
         let item_lookup = src.item_lookup;   
-        let (rooms, specials_ll, meta) = makearea(src);
+        let (rooms, specials_ll, meta, uniques) = makearea(src);
 
         let mut specials = [None; MAX_UNIQUE_ITEM_POSITIONS];
 
@@ -393,26 +433,9 @@ impl Area {
         let mut j: usize = 0;
         while i < specials_ll.len() {
             if let Some(spcll) = specials_ll[i] {
-                let chr = spcll.chr;
-                let mut k = 0;
-                let mut found = false;
-
-                while k < item_lookup.len() {
-                    let MappingBetweenCharAndItem { chr: m_chr, item, priority } = item_lookup[k];
-                    if m_chr == chr {
-                        found = true;
-
-                        specials[j] = Some(UniqueItemPosition{item, pos:spcll.pos, priority});
-                        j+=1;
-
-                        break;
-                    }
-                    k += 1;
-                }
-
-                if !found {
-                    b"Encountered unique item character that is not mapped to UniquItem"[999];
-                }
+                let (item, priority) = lookup_unique(spcll.chr, item_lookup);
+                specials[j] = Some(UniqueItemPosition{item, pos:spcll.pos, priority});
+                j+=1;
             }
             i+=1;
         }
@@ -420,6 +443,7 @@ impl Area {
         (Area {
             rooms,
             meta,
+            uniques,
         }, specials)
     }
 }

@@ -46,11 +46,13 @@ struct Level {
 }
 
 pub const MAX_UNIQUE_ITEM_POSITIONS : usize = 16;
+pub const MAX_UNIQUE_ITEMS_PER_ROOM: usize = 2;
 pub type UniqueItemPositions = [Option<UniqueItemPosition>; MAX_UNIQUE_ITEM_POSITIONS];
 
 pub struct Area {
     rooms: [RoomData; 32],
     meta: [RoomMetadata; 32],
+    uniques: [[Option<UniqueItem>; MAX_UNIQUE_ITEMS_PER_ROOM]; 32],
 }
 
 pub struct AreaSource<const C: usize, const T:usize, const I:usize> {
@@ -95,9 +97,6 @@ pub struct CharDescription {
 pub struct UniqueItemPositionLowlevel {
     chr: u8,
     pos : TilePos,
-
-    /// For temporary position overrides during development
-    priority: bool,
 }
 
 #[derive(Clone, Copy)]
