@@ -1,5 +1,5 @@
 
-use crate::{LEVEL, TilePos, camera::Camera, cf32, tiles::{self, TileTypeEnum, TileType}, utils::draw_colours, wasm4::{SCREEN_SIZE, blit}};
+use crate::{LEVEL, MAX_UNIQUE_ITEMS_PER_ROOM, TilePos, UniqueItemsInThisRoom, camera::Camera, cf32, tiles::{self, TileTypeEnum, TileType}, utils::draw_colours, wasm4::{SCREEN_SIZE, blit}};
 
 pub struct World {   
 }
@@ -52,6 +52,16 @@ impl World {
             3 => meta.block_type_b.unwrap(),
             _ => unreachable!(),
         }
+    }
+
+    pub fn get_unique_items_in_the_room_of_tile(&self, (x,y):TilePos) -> UniqueItemsInThisRoom {
+        if x >= 16*8 || y >= 16*4 {
+            return [None; MAX_UNIQUE_ITEMS_PER_ROOM];
+        }
+
+        let room_x = x >> 4;
+        let room_y = y >> 4;
+        LEVEL.the_area.uniques[(room_y*8+room_x) as usize]
     }
 
     pub fn from_world_coords((x,y): TilePos) -> cf32 {

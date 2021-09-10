@@ -24,9 +24,9 @@ pub const AREA1: (Area, UniqueItemPositions) = Area::build(AreaSource {
     //    `B` ...               B, ...
     //        Same character cannot have both A and B in it. Individual room cannot assign different tile mappings to A or B.
     //    `!` - position of a unique item. In area itself it is an empty tile.
-    char_lookup: ll_char_descriptions::<6>(b"s!.      J.A      jAX      l.B      LBX     S!.  "),
+    char_lookup: ll_char_descriptions::<7>(b"s!. J.A jAX l.B LBX S!. i.!"),
     tile_lookup: tile_types_mapping![(JumpyTile J j) (Ladder1Tile L l)],
-    item_lookup: unique_items_mapping![(PlayerStart s) (PlayerStart! S)],
+    item_lookup: unique_items_mapping![(PlayerStart s) (PlayerStart! S) (Info1 i)],
     cells: b"                                                                                                       <
 |` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           |
 |        `               `               `               `               `               `               `               `       |
@@ -50,7 +50,7 @@ pub const AREA1: (Area, UniqueItemPositions) = Area::build(AreaSource {
 |XXXX            XXXX            XXXXXXXXLl                      XXXX    XXXXXX     XXXX XXXX    XXXX            XXXX            |
 |X              XX              XX   XXXXXXLl                   XX       XXXXXXXXXX XXXX XXXX   XX              XX              X|
 |X   ,``  `,    XX   ,``  `,    XX   XXXXXXXXXLl          jjj   XX   ,`` XXXXXXXXX  XXXX XXXX   XX   ,``  `,    XX   ,``  `,    X|
-|X ,`           XX ,`           XX ,`XXXXXXXXXXXXXXl            XX ,`    XXXXXXXXX XXXXX XXXX   XX ,`           XX ,`           X|
+|X ,`           XX ,`           XX ,`XXXXXXXXXXXXXXl         i  XX ,`    XXXXXXXXX XXXXX XXXX   XX ,`           XX ,`           X|
 |XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXX XXXXX XXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXX|
 |` ```           ` ```           ` ```           ` ```           ` ```   XXXXXX  ` XXXXX XXXX    ` ```           ` ```           |
 |        `               `               `               `               `               `               `               `       |

@@ -9,6 +9,7 @@ mod camera;
 mod player;
 mod tiles;
 mod world;
+mod unique_items;
 
 use camera::Camera;
 use world::World;
@@ -36,6 +37,7 @@ type RoomBlock = [RoomData; 32];
 #[derive(variant_count::VariantCount, PartialEq, Eq, Copy, Clone)]
 pub enum UniqueItem {
     PlayerStart,
+    Info1,
 }
 
 pub type TilePos = (u16, u16);
@@ -48,11 +50,12 @@ struct Level {
 pub const MAX_UNIQUE_ITEM_POSITIONS : usize = 16;
 pub const MAX_UNIQUE_ITEMS_PER_ROOM: usize = 2;
 pub type UniqueItemPositions = [Option<UniqueItemPosition>; MAX_UNIQUE_ITEM_POSITIONS];
+pub type UniqueItemsInThisRoom = [Option<UniqueItem>; MAX_UNIQUE_ITEMS_PER_ROOM];
 
 pub struct Area {
     rooms: [RoomData; 32],
     meta: [RoomMetadata; 32],
-    uniques: [[Option<UniqueItem>; MAX_UNIQUE_ITEMS_PER_ROOM]; 32],
+    uniques: [UniqueItemsInThisRoom; 32],
 }
 
 pub struct AreaSource<const C: usize, const T:usize, const I:usize> {
@@ -120,7 +123,6 @@ pub struct MappingBetweenCharAndTileType {
     chr: u8,
     tt: TileTypeEnum,
 }
-
 
 struct TextBox {
     c: u8,

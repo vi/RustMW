@@ -194,7 +194,7 @@ pub const fn room16x16(s: &'static [u8]) -> [u32; 16] {
     buf
 }
 
-use crate::{Area, AreaSource, CharDescription, Level, LowlevelCellType, MAX_UNIQUE_ITEMS_PER_ROOM, MAX_UNIQUE_ITEM_POSITIONS, MappingBetweenCharAndItem, MappingBetweenCharAndTileType, RoomBlock, RoomMetadata, TilePos, UniqueItem, UniqueItemPosition, UniqueItemPositionLowlevel, UniqueItemPositions, level, tiles::{TileTypeEnum, tile_type_enum_eq}}; 
+use crate::{Area, AreaSource, CharDescription, Level, LowlevelCellType, MAX_UNIQUE_ITEMS_PER_ROOM, MAX_UNIQUE_ITEM_POSITIONS, MappingBetweenCharAndItem, MappingBetweenCharAndTileType, RoomBlock, RoomMetadata, TilePos, UniqueItem, UniqueItemPosition, UniqueItemPositionLowlevel, UniqueItemPositions, UniqueItemsInThisRoom, level, tiles::{TileTypeEnum, tile_type_enum_eq}}; 
 
 const fn lookup_char<const N:usize>(c: u8, char_lookup:[CharDescription; N]) -> CharDescription {
     let mut j = 0;
@@ -240,7 +240,7 @@ const fn makearea<const C:usize, const T:usize, const I:usize>(src: AreaSource<C
 (   RoomBlock, 
     [Option<UniqueItemPositionLowlevel>; 32],
     [RoomMetadata; 32],
-    [[Option<UniqueItem>; MAX_UNIQUE_ITEMS_PER_ROOM]; 32],
+    [UniqueItemsInThisRoom; 32],
 ) {
     let mut buf = [[0u32; 16]; 32];
     let mut special_positions = [None; 32];
