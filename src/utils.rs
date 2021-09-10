@@ -74,56 +74,106 @@ macro_rules! unique_items_mapping {
 }
 
 
-pub const fn sprite8x8(x: &'static str) -> [u8; 8] {
+pub const fn sprite8x8(s: &'static[u8]) -> [u8; 8] {
     let mut buf = [0u8; 8];
-    let s = x.as_bytes();
     let mut byteidx = 0;
     let mut bitidx = 0;
     let mut i = 0;
+    let mut column = -1;
+
+    let mut within_sprite_area = false;
     while i < s.len() {
         let chr = s[i];
         match chr {
-            b'X' => {
+            b'|' if !within_sprite_area => {
+                within_sprite_area = true;
+                bitidx = 0;
+                column = -1;
+            }
+            b'|' if within_sprite_area => {
+                within_sprite_area = false;
+                if column != 15 {
+                    b"8x8 sprites much have exactly 15 characters between | markers"[999];
+                }
+                byteidx += 1;
+            }
+            b' ' if column % 2 == 1 => (),
+            b'X' if column % 2 == 1 => {
+                b"Each odd column between markers must be empty"[999];
+            }
+            b'X' | b'x' if column % 2 == 0 => {
                 bitidx += 1;
             }
-            b'.' => {
+            b' ' | b'.' if column % 2 == 0 => {
                 buf[byteidx] |= 1 << (7 - bitidx);
                 bitidx += 1;
             }
+            _ if within_sprite_area => {
+                b"Unknown character within marker zone"[999];
+            }
             _ => (),
         }
-        if bitidx >= 8 {
-            bitidx = 0;
-            byteidx += 1;
-        }
         i += 1;
+        if within_sprite_area {
+            column += 1;
+        }
+    }
+    if byteidx != 8 {
+        b"Unfinished sprite"[999];
     }
     buf
 }
 
-pub const fn sprite16x16(x: &'static str) -> [u8; 32] {
+pub const fn sprite16x16(s: &'static [u8]) -> [u8; 32] {
+    
     let mut buf = [0u8; 32];
-    let s = x.as_bytes();
     let mut byteidx = 0;
     let mut bitidx = 0;
     let mut i = 0;
+    let mut column = -1;
+
+    let mut within_sprite_area = false;
     while i < s.len() {
         let chr = s[i];
         match chr {
-            b'X' => {
+            b'|' if !within_sprite_area => {
+                within_sprite_area = true;
+                bitidx = 0;
+                column = -1;
+            }
+            b'|' if within_sprite_area => {
+                within_sprite_area = false;
+                if column != 31 {
+                    b"8x8 sprites much have exactly 31 characters between | markers"[999];
+                }
+            }
+            b' ' if column % 2 == 1 => (),
+            b'X' if column % 2 == 1 => {
+                b"Each odd column between markers must be empty"[999];
+            }
+            b'X' | b'x' if column % 2 == 0 => {
                 bitidx += 1;
             }
-            b'.' => {
+            b' ' | b'.' if column % 2 == 0 => {
                 buf[byteidx] |= 1 << (7 - bitidx);
                 bitidx += 1;
             }
+            _ if within_sprite_area => {
+                b"Unknown character within marker zone"[999];
+            }
             _ => (),
         }
-        if bitidx >= 8 {
+        if bitidx == 8 {
             bitidx = 0;
             byteidx += 1;
         }
         i += 1;
+        if within_sprite_area {
+            column += 1;
+        }
+    }
+    if byteidx != 32 {
+        b"Unfinished sprite"[999];
     }
     buf
 }
