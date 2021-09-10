@@ -23,7 +23,7 @@ use num_complex::Complex32 as cf32;
 type RoomData = [u32; 16];
 
 #[derive(Clone, Copy)]
-struct RoomMetadata {
+pub struct RoomMetadata {
     block_type_sp: Option<TileTypeEnum>,
     block_type_x: Option<TileTypeEnum>,
     block_type_a: Option<TileTypeEnum>,
@@ -45,69 +45,6 @@ struct Level {
     unique_items: [(UniqueItem, TilePos); UniqueItem::VARIANT_COUNT],
 }
 
-impl Level {
-    pub const fn new() -> Level {
-        let mut unique_items = [(UniqueItem::PlayerStart, (0,0)); UniqueItem::VARIANT_COUNT];
-        let mut prioritized = [false; UniqueItem::VARIANT_COUNT];
-
-        let mut i = 0;
-
-        let mut j = 0;
-        let specials = level::AREA1.1;
-        while j < specials.len() {
-            if let Some(UniqueItemPosition { item, pos, priority}) = specials[j] {
-                let mut insert_at_the_end = true;
-
-                let mut k = 0;
-                while k < i {
-                    if unique_items[k].0 as u8== item as u8 {
-                        insert_at_the_end = false;
-                        match (priority, prioritized[k]) {
-                            (false, false) => {b"Duplicate position for an unique item"[999];}
-                            (false, true) => (), // silently ignore non-priority position when priority one is already set
-                            (true, false) => {
-                                unique_items[k].1 = pos;
-                                prioritized[k] = true;
-                            }
-                            (true, true) => {b"Duplicate priority position for an unique item"[999];}
-                        }
-                    }
-                    k+=1;
-                }
-                
-                if insert_at_the_end {
-                    unique_items[i].0 = item;
-                    unique_items[i].1 = pos;
-                    prioritized[i] = priority;
-                    i+=1;
-                }
-            }
-            j += 1;
-        }
-        if i != UniqueItem::VARIANT_COUNT {
-            b"There is a missing unique item on the level"[999];
-        }
-
-        Level {
-            the_area: level::AREA1.0,
-            unique_items,
-        }
-    }
-
-    pub const fn unique_item_pos(&self, item: UniqueItem) -> TilePos {
-        let mut i=0;
-        while i < self.unique_items.len() {
-            if item as u8 == self.unique_items[i].0 as u8 {
-                return self.unique_items[i].1;
-            }
-            i+=1;
-        }
-        #[allow(unconditional_panic)]
-        b"Internal error: Level::new should have caught missing item position"[999];
-        (0,0)
-    }
-}
-
 pub const MAX_UNIQUE_ITEM_POSITIONS : usize = 16;
 pub type UniqueItemPositions = [Option<UniqueItemPosition>; MAX_UNIQUE_ITEM_POSITIONS];
 
@@ -117,56 +54,6 @@ pub struct Area {
 }
 
 static LEVEL : Level = Level::new();
-
-impl Area {
-    const fn build(s: &'static [u8]) -> (Area, UniqueItemPositions) {
-        let char_lookup = utils::ll_char_descriptions::<6>(b"S!.      J.A      jAX      l.B      LBX     !!.  ");
-        let item_lookup: [MappingBetweenCharAndItem; 2] = [c2i!(S PlayerStart), c2i!(b'!' ! PlayerStart)];
-       
-        let (rooms, specials_ll) = utils::makearea(s, char_lookup);
-        let meta = [RoomMetadata {
-            block_type_sp: Some(TileTypeEnum::EmptyTile(tiles::EmptyTile)),
-            block_type_x: Some(TileTypeEnum::UsualArea1Tile(tiles::UsualArea1Tile)),
-            block_type_a: Some(TileTypeEnum::JumpyTile(tiles::JumpyTile)),
-            block_type_b: Some(TileTypeEnum::Ladder1Tile(tiles::Ladder1Tile)),
-        }; 32];
-
-        let mut specials = [None; MAX_UNIQUE_ITEM_POSITIONS];
-
-        let mut i = 0;
-        let mut j: usize = 0;
-        while i < specials_ll.len() {
-            if let Some(spcll) = specials_ll[i] {
-                let chr = spcll.chr;
-                let mut k = 0;
-                let mut found = false;
-
-                while k < item_lookup.len() {
-                    let MappingBetweenCharAndItem { chr: m_chr, item, priority } = item_lookup[k];
-                    if m_chr == chr {
-                        found = true;
-
-                        specials[j] = Some(UniqueItemPosition{item, pos:spcll.pos, priority});
-                        j+=1;
-
-                        break;
-                    }
-                    k += 1;
-                }
-
-                if !found {
-                    b"Encountered unique item character that is not mapped to UniquItem"[999];
-                }
-            }
-            i+=1;
-        }
-
-        (Area {
-            rooms,
-            meta,
-        }, specials)
-    }
-}
 
 #[derive(Clone, Copy)]
 pub enum LowlevelCellType {
@@ -219,6 +106,13 @@ pub struct MappingBetweenCharAndItem {
     item: UniqueItem,
     priority: bool,
 }
+
+#[derive(Clone, Copy)]
+pub struct MappingBetweenCharAndTileType {
+    chr: u8,
+    tt: TileTypeEnum,
+}
+
 
 struct TextBox {
     c: u8,

@@ -1,8 +1,8 @@
-use crate::utils::{room16x16};
+use crate::utils::{ll_char_descriptions, room16x16};
 use crate::{Area, RoomData, UniqueItemPositions};
 
 
-const MAP: RoomData = room16x16( b"
+const FIRST_MAP: RoomData = room16x16( b"
 |` ```           |
 |        `       |
 |XXXX       ,    |
@@ -46,4 +46,5 @@ pub const AREA1: (Area, UniqueItemPositions) = Area::build(b"                   
 |X   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    X|
 |X ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           X|
 |XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXX|
-");
+", ll_char_descriptions::<6>(b"S!.      J.A      jAX      l.B      LBX     !!.  ",
+));

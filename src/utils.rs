@@ -1,4 +1,74 @@
 
+#[macro_export]
+macro_rules! tile_types {
+    (convert $chr:ident) => {
+        stringify!($chr).as_bytes()[0]
+    };
+    (convert $chr:literal) => {
+        $chr
+    };
+    ($(($item:ident $($chr:tt)*))*) => {
+        [
+            $(
+                $(
+                    crate::MappingBetweenCharAndTileType {
+                        chr: tile_types!(convert $chr),
+                        tt: crate::tiles::TileTypeEnum::$item(crate::tiles::$item),
+                    }
+                ),*
+            ),*
+        ]
+    };
+}
+
+
+#[macro_export]
+macro_rules! unique_items {
+    (c2i $item:ident $chr:ident ) => {
+        crate::MappingBetweenCharAndItem {
+            chr: stringify!($chr).as_bytes()[0],
+            item: crate::UniqueItem::$item,
+            priority: false,
+        }
+    };
+    (c2i $item:ident ! $chr:ident ) => {
+        crate::MappingBetweenCharAndItem {
+            chr: stringify!($chr).as_bytes()[0],
+            item: crate::UniqueItem::$item,
+            priority: true,
+        }
+    };
+    (c2i  $item:ident $chr:literal) => {
+        crate::MappingBetweenCharAndItem {
+            chr: $chr,
+            item: crate::UniqueItem::$item,
+            priority: false,
+        }
+    };
+    (c2i $item:ident ! $chr:literal) => {
+        crate::MappingBetweenCharAndItem {
+            chr: $chr,
+            item: crate::UniqueItem::$item,
+            priority: true,
+        }
+    };
+
+    (convert $chr:ident) => {
+        stringify!($chr).as_bytes()[0]
+    };
+    (convert $chr:literal) => {
+        $chr
+    };
+    ($( (  $($x:tt)* ) )*) => {
+        [
+            $(
+                unique_items!(c2i $($x)*)
+            ),*
+        ]
+    };
+}
+
+
 pub const fn sprite8x8(x: &'static str) -> [u8; 8] {
     let mut buf = [0u8; 8];
     let s = x.as_bytes();
@@ -119,7 +189,7 @@ pub const fn room16x16(s: &'static [u8]) -> [u32; 16] {
     buf
 }
 
-use crate::{CharDescription, RoomBlock, UniqueItemPositionLowlevel, LowlevelCellType}; 
+use crate::{Area, CharDescription, Level, LowlevelCellType, MAX_UNIQUE_ITEM_POSITIONS, MappingBetweenCharAndItem, MappingBetweenCharAndTileType, RoomBlock, RoomMetadata, TilePos, UniqueItem, UniqueItemPosition, UniqueItemPositionLowlevel, UniqueItemPositions, level, tiles::{self, TileTypeEnum}}; 
 
 const fn lookup_char<const N:usize>(c: u8, char_lookup:[CharDescription; N]) -> CharDescription {
     let mut j = 0;
@@ -134,7 +204,7 @@ const fn lookup_char<const N:usize>(c: u8, char_lookup:[CharDescription; N]) -> 
     }
 }
 
-pub const fn makearea<const N:usize>(s: &'static [u8], char_lookup:[CharDescription; N]) -> (RoomBlock, [Option<UniqueItemPositionLowlevel>; 32]) {
+pub const fn makearea<const N:usize, const M:usize>(s: &'static [u8], char_lookup:[CharDescription; N], tile_lookup: [MappingBetweenCharAndTileType; M]) -> (RoomBlock, [Option<UniqueItemPositionLowlevel>; 32], [RoomMetadata; 32]) {
     let mut buf = [[0u32; 16]; 32];
     let mut special_positions = [None; 32];
     let mut special_position_index = 0;
@@ -220,9 +290,123 @@ pub const fn makearea<const N:usize>(s: &'static [u8], char_lookup:[CharDescript
         b"There must by exactly 32 lines in each area"[999];
     }
 
-    (buf, special_positions)
+    let meta = [RoomMetadata {
+        block_type_sp: Some(TileTypeEnum::EmptyTile(tiles::EmptyTile)),
+        block_type_x: Some(TileTypeEnum::UsualArea1Tile(tiles::UsualArea1Tile)),
+        block_type_a: Some(TileTypeEnum::JumpyTile(tiles::JumpyTile)),
+        block_type_b: Some(TileTypeEnum::Ladder1Tile(tiles::Ladder1Tile)),
+    }; 32];
+
+    (buf, special_positions, meta)
 }
 
+
+impl Area {
+    pub const fn build<const C: usize>(s: &'static [u8], char_lookup: [CharDescription; C]) -> (Area, UniqueItemPositions) {
+        let tile_lookup: [MappingBetweenCharAndTileType; 4] = tile_types![(JumpyTile J j) (Ladder1Tile L l)];
+        let item_lookup: [MappingBetweenCharAndItem; 2] = unique_items![(PlayerStart S) (PlayerStart! b'!')];
+       
+        let (rooms, specials_ll, meta) = makearea(s, char_lookup, tile_lookup);
+
+        let mut specials = [None; MAX_UNIQUE_ITEM_POSITIONS];
+
+        let mut i = 0;
+        let mut j: usize = 0;
+        while i < specials_ll.len() {
+            if let Some(spcll) = specials_ll[i] {
+                let chr = spcll.chr;
+                let mut k = 0;
+                let mut found = false;
+
+                while k < item_lookup.len() {
+                    let MappingBetweenCharAndItem { chr: m_chr, item, priority } = item_lookup[k];
+                    if m_chr == chr {
+                        found = true;
+
+                        specials[j] = Some(UniqueItemPosition{item, pos:spcll.pos, priority});
+                        j+=1;
+
+                        break;
+                    }
+                    k += 1;
+                }
+
+                if !found {
+                    b"Encountered unique item character that is not mapped to UniquItem"[999];
+                }
+            }
+            i+=1;
+        }
+
+        (Area {
+            rooms,
+            meta,
+        }, specials)
+    }
+}
+
+impl Level {
+    pub const fn new() -> Level {
+        let mut unique_items = [(UniqueItem::PlayerStart, (0,0)); UniqueItem::VARIANT_COUNT];
+        let mut prioritized = [false; UniqueItem::VARIANT_COUNT];
+
+        let mut i = 0;
+
+        let mut j = 0;
+        let specials = level::AREA1.1;
+        while j < specials.len() {
+            if let Some(UniqueItemPosition { item, pos, priority}) = specials[j] {
+                let mut insert_at_the_end = true;
+
+                let mut k = 0;
+                while k < i {
+                    if unique_items[k].0 as u8== item as u8 {
+                        insert_at_the_end = false;
+                        match (priority, prioritized[k]) {
+                            (false, false) => {b"Duplicate position for an unique item"[999];}
+                            (false, true) => (), // silently ignore non-priority position when priority one is already set
+                            (true, false) => {
+                                unique_items[k].1 = pos;
+                                prioritized[k] = true;
+                            }
+                            (true, true) => {b"Duplicate priority position for an unique item"[999];}
+                        }
+                    }
+                    k+=1;
+                }
+                
+                if insert_at_the_end {
+                    unique_items[i].0 = item;
+                    unique_items[i].1 = pos;
+                    prioritized[i] = priority;
+                    i+=1;
+                }
+            }
+            j += 1;
+        }
+        if i != UniqueItem::VARIANT_COUNT {
+            b"There is a missing unique item on the level"[999];
+        }
+
+        Level {
+            the_area: level::AREA1.0,
+            unique_items,
+        }
+    }
+
+    pub const fn unique_item_pos(&self, item: UniqueItem) -> TilePos {
+        let mut i=0;
+        while i < self.unique_items.len() {
+            if item as u8 == self.unique_items[i].0 as u8 {
+                return self.unique_items[i].1;
+            }
+            i+=1;
+        }
+        #[allow(unconditional_panic)]
+        b"Internal error: Level::new should have caught missing item position"[999];
+        (0,0)
+    }
+}
 
 
 #[inline]
@@ -341,36 +525,4 @@ pub const fn ll_char_descriptions<const N: usize>(specifier: &'static [u8]) -> [
         b"Mismatch between declared length of low-level cell types and actual number of letter triplets"[999];
     }
     v
-}
-
-#[macro_export]
-macro_rules! c2i {
-    ($chr:ident $item:ident) => {
-        crate::MappingBetweenCharAndItem {
-            chr: stringify!($chr).as_bytes()[0],
-            item: crate::UniqueItem::$item,
-            priority: false,
-        }
-    };
-    ($chr:ident ! $item:ident) => {
-        crate::MappingBetweenCharAndItem {
-            chr: stringify!($chr).as_bytes()[0],
-            item: crate::UniqueItem::$item,
-            priority: true,
-        }
-    };
-    ($chr:literal $item:ident) => {
-        crate::MappingBetweenCharAndItem {
-            chr: $chr,
-            item: crate::UniqueItem::$item,
-            priority: false,
-        }
-    };
-    ($chr:literal ! $item:ident) => {
-        crate::MappingBetweenCharAndItem {
-            chr: $chr,
-            item: crate::UniqueItem::$item,
-            priority: true,
-        }
-    };
 }
