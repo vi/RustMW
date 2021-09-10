@@ -1,6 +1,6 @@
 
 #[macro_export]
-macro_rules! tile_types {
+macro_rules! tile_types_mapping {
     (convert $chr:ident) => {
         stringify!($chr).as_bytes()[0]
     };
@@ -12,7 +12,7 @@ macro_rules! tile_types {
             $(
                 $(
                     crate::MappingBetweenCharAndTileType {
-                        chr: tile_types!(convert $chr),
+                        chr: tile_types_mapping!(convert $chr),
                         tt: crate::tiles::TileTypeEnum::$item(crate::tiles::$item),
                     }
                 ),*
@@ -21,9 +21,14 @@ macro_rules! tile_types {
     };
 }
 
+#[macro_export]
+macro_rules! tile_type {
+    ($item:ident) => {crate::tiles::TileTypeEnum::$item(crate::tiles::$item)}
+}
+
 
 #[macro_export]
-macro_rules! unique_items {
+macro_rules! unique_items_mapping {
     (c2i $item:ident $chr:ident ) => {
         crate::MappingBetweenCharAndItem {
             chr: stringify!($chr).as_bytes()[0],
@@ -62,7 +67,7 @@ macro_rules! unique_items {
     ($( (  $($x:tt)* ) )*) => {
         [
             $(
-                unique_items!(c2i $($x)*)
+                unique_items_mapping!(c2i $($x)*)
             ),*
         ]
     };
@@ -189,7 +194,7 @@ pub const fn room16x16(s: &'static [u8]) -> [u32; 16] {
     buf
 }
 
-use crate::{Area, CharDescription, Level, LowlevelCellType, MAX_UNIQUE_ITEM_POSITIONS, MappingBetweenCharAndItem, MappingBetweenCharAndTileType, RoomBlock, RoomMetadata, TilePos, UniqueItem, UniqueItemPosition, UniqueItemPositionLowlevel, UniqueItemPositions, level, tiles::{self, TileTypeEnum}}; 
+use crate::{Area, AreaSource, CharDescription, Level, LowlevelCellType, MAX_UNIQUE_ITEM_POSITIONS, MappingBetweenCharAndItem, MappingBetweenCharAndTileType, RoomBlock, RoomMetadata, TilePos, UniqueItem, UniqueItemPosition, UniqueItemPositionLowlevel, UniqueItemPositions, level, tiles::{self, TileTypeEnum}}; 
 
 const fn lookup_char<const N:usize>(c: u8, char_lookup:[CharDescription; N]) -> CharDescription {
     let mut j = 0;
@@ -204,7 +209,7 @@ const fn lookup_char<const N:usize>(c: u8, char_lookup:[CharDescription; N]) -> 
     }
 }
 
-pub const fn makearea<const N:usize, const M:usize>(s: &'static [u8], char_lookup:[CharDescription; N], tile_lookup: [MappingBetweenCharAndTileType; M]) -> (RoomBlock, [Option<UniqueItemPositionLowlevel>; 32], [RoomMetadata; 32]) {
+pub const fn makearea<const C:usize, const T:usize, const I:usize>(src: AreaSource<C,T,I>) -> (RoomBlock, [Option<UniqueItemPositionLowlevel>; 32], [RoomMetadata; 32]) {
     let mut buf = [[0u32; 16]; 32];
     let mut special_positions = [None; 32];
     let mut special_position_index = 0;
@@ -214,6 +219,8 @@ pub const fn makearea<const N:usize, const M:usize>(s: &'static [u8], char_looku
 
     // stores whether we are currently parsing text between the `|` markers
     let mut within_active_area = false;
+
+    let s = src.cells;
 
 
     let mut i = 0;
@@ -249,7 +256,7 @@ pub const fn makearea<const N:usize, const M:usize>(s: &'static [u8], char_looku
                     b',' => (Empty, Solid),
                     b'X' => (Solid, Solid),
                     _ => {
-                        let info = lookup_char(chr, char_lookup);
+                        let info = lookup_char(chr, src.char_lookup);
                         (info.upper, info.lower)
                     }
                 };
@@ -302,11 +309,9 @@ pub const fn makearea<const N:usize, const M:usize>(s: &'static [u8], char_looku
 
 
 impl Area {
-    pub const fn build<const C: usize>(s: &'static [u8], char_lookup: [CharDescription; C]) -> (Area, UniqueItemPositions) {
-        let tile_lookup: [MappingBetweenCharAndTileType; 4] = tile_types![(JumpyTile J j) (Ladder1Tile L l)];
-        let item_lookup: [MappingBetweenCharAndItem; 2] = unique_items![(PlayerStart S) (PlayerStart! b'!')];
-       
-        let (rooms, specials_ll, meta) = makearea(s, char_lookup, tile_lookup);
+    pub const fn build<const C: usize, const T: usize, const I:usize>(src: AreaSource<C,T,I>) -> (Area, UniqueItemPositions) {  
+        let item_lookup = src.item_lookup;   
+        let (rooms, specials_ll, meta) = makearea(src);
 
         let mut specials = [None; MAX_UNIQUE_ITEM_POSITIONS];
 

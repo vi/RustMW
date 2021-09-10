@@ -53,6 +53,15 @@ pub struct Area {
     meta: [RoomMetadata; 32],
 }
 
+pub struct AreaSource<const C: usize, const T:usize, const I:usize> {
+    pub cells: &'static [u8],
+    pub empty_tile_style: TileTypeEnum,
+    pub solid_tile_style: TileTypeEnum,
+    char_lookup: [CharDescription; C],
+    tile_lookup: [MappingBetweenCharAndTileType; T],
+    item_lookup: [MappingBetweenCharAndItem; I],
+}
+
 static LEVEL : Level = Level::new();
 
 #[derive(Clone, Copy)]
