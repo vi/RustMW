@@ -342,3 +342,35 @@ pub const fn ll_char_descriptions<const N: usize>(specifier: &'static [u8]) -> [
     }
     v
 }
+
+#[macro_export]
+macro_rules! c2i {
+    ($chr:ident $item:ident) => {
+        crate::MappingBetweenCharAndItem {
+            chr: stringify!($chr).as_bytes()[0],
+            item: crate::UniqueItem::$item,
+            priority: false,
+        }
+    };
+    ($chr:ident ! $item:ident) => {
+        crate::MappingBetweenCharAndItem {
+            chr: stringify!($chr).as_bytes()[0],
+            item: crate::UniqueItem::$item,
+            priority: true,
+        }
+    };
+    ($chr:literal $item:ident) => {
+        crate::MappingBetweenCharAndItem {
+            chr: $chr,
+            item: crate::UniqueItem::$item,
+            priority: false,
+        }
+    };
+    ($chr:literal ! $item:ident) => {
+        crate::MappingBetweenCharAndItem {
+            chr: $chr,
+            item: crate::UniqueItem::$item,
+            priority: true,
+        }
+    };
+}

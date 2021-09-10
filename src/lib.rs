@@ -121,6 +121,7 @@ static LEVEL : Level = Level::new();
 impl Area {
     const fn build(s: &'static [u8]) -> (Area, UniqueItemPositions) {
         let char_lookup = utils::ll_char_descriptions::<6>(b"S!.      J.A      jAX      l.B      LBX     !!.  ");
+        let item_lookup: [MappingBetweenCharAndItem; 2] = [c2i!(S PlayerStart), c2i!(b'!' ! PlayerStart)];
        
         let (rooms, specials_ll) = utils::makearea(s, char_lookup);
         let meta = [RoomMetadata {
@@ -137,20 +138,25 @@ impl Area {
         while i < specials_ll.len() {
             if let Some(spcll) = specials_ll[i] {
                 let chr = spcll.chr;
-                let mut priority = spcll.priority;
-                let item = match chr {
-                    b'S' => UniqueItem::PlayerStart,
-                    b'!' => {
-                        priority = true;
-                        UniqueItem::PlayerStart
+                let mut k = 0;
+                let mut found = false;
+
+                while k < item_lookup.len() {
+                    let MappingBetweenCharAndItem { chr: m_chr, item, priority } = item_lookup[k];
+                    if m_chr == chr {
+                        found = true;
+
+                        specials[j] = Some(UniqueItemPosition{item, pos:spcll.pos, priority});
+                        j+=1;
+
+                        break;
                     }
-                    _ => {
-                        b"Unknown special item"[999];
-                        UniqueItem::PlayerStart
-                    }
-                };
-                specials[j] = Some(UniqueItemPosition{item, pos:spcll.pos, priority});
-                j+=1;
+                    k += 1;
+                }
+
+                if !found {
+                    b"Encountered unique item character that is not mapped to UniquItem"[999];
+                }
             }
             i+=1;
         }
@@ -204,6 +210,13 @@ pub struct UniqueItemPosition {
     pos : TilePos,
 
     /// For temporary position overrides during development
+    priority: bool,
+}
+
+#[derive(Clone, Copy)]
+pub struct MappingBetweenCharAndItem {
+    chr: u8,
+    item: UniqueItem,
     priority: bool,
 }
 
