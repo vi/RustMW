@@ -55,19 +55,7 @@ impl Level {
         let mut j = 0;
         let specials = level::AREA1.1;
         while j < specials.len() {
-            if let Some(SpecialPosition { chr, pos, mut priority}) = specials[j] {
-                let item = match chr {
-                    b'S' => UniqueItem::PlayerStart,
-                    b'!' => {
-                        priority = true;
-                        UniqueItem::PlayerStart
-                    }
-                    _ => {
-                        b"Unknown special item"[999];
-                        UniqueItem::PlayerStart
-                    }
-                };
-
+            if let Some(UniqueItemPosition { item, pos, priority}) = specials[j] {
                 let mut insert_at_the_end = true;
 
                 let mut k = 0;
@@ -120,7 +108,8 @@ impl Level {
     }
 }
 
-type SpecialPositions = [Option<SpecialPosition>; 32];
+pub const MAX_UNIQUE_ITEM_POSITIONS : usize = 16;
+pub type UniqueItemPositions = [Option<UniqueItemPosition>; MAX_UNIQUE_ITEM_POSITIONS];
 
 pub struct Area {
     rooms: [RoomData; 32],
@@ -130,10 +119,10 @@ pub struct Area {
 static LEVEL : Level = Level::new();
 
 impl Area {
-    const fn build(s: &'static [u8]) -> (Area, SpecialPositions) {
+    const fn build(s: &'static [u8]) -> (Area, UniqueItemPositions) {
         let char_lookup = utils::ll_char_descriptions::<6>(b"S!.      J.A      jAX      l.B      LBX     !!.  ");
        
-        let (rooms, specials) = utils::makearea(s, char_lookup);
+        let (rooms, specials_ll) = utils::makearea(s, char_lookup);
         let meta = [RoomMetadata {
             block_type_sp: Some(TileTypeEnum::EmptyTile(tiles::EmptyTile)),
             block_type_x: Some(TileTypeEnum::UsualArea1Tile(tiles::UsualArea1Tile)),
@@ -141,19 +130,30 @@ impl Area {
             block_type_b: Some(TileTypeEnum::Ladder1Tile(tiles::Ladder1Tile)),
         }; 32];
 
-        /*
-        let mut player_starting_point = None;
+        let mut specials = [None; MAX_UNIQUE_ITEM_POSITIONS];
 
         let mut i = 0;
-        while i < specials.len() {
-            if let Some(s) = specials[i] {
-                if s.chr == b'S' {
-                    player_starting_point = Some((s.x, s.y));
-                }
+        let mut j: usize = 0;
+        while i < specials_ll.len() {
+            if let Some(spcll) = specials_ll[i] {
+                let chr = spcll.chr;
+                let mut priority = spcll.priority;
+                let item = match chr {
+                    b'S' => UniqueItem::PlayerStart,
+                    b'!' => {
+                        priority = true;
+                        UniqueItem::PlayerStart
+                    }
+                    _ => {
+                        b"Unknown special item"[999];
+                        UniqueItem::PlayerStart
+                    }
+                };
+                specials[j] = Some(UniqueItemPosition{item, pos:spcll.pos, priority});
+                j+=1;
             }
-            i += 1;
+            i+=1;
         }
-        */
 
         (Area {
             rooms,
@@ -190,8 +190,17 @@ pub struct CharDescription {
     lower: LowlevelCellType,
 }
 #[derive(Clone, Copy)]
-pub struct SpecialPosition {
+pub struct UniqueItemPositionLowlevel {
     chr: u8,
+    pos : TilePos,
+
+    /// For temporary position overrides during development
+    priority: bool,
+}
+
+#[derive(Clone, Copy)]
+pub struct UniqueItemPosition {
+    item: UniqueItem,
     pos : TilePos,
 
     /// For temporary position overrides during development

@@ -119,7 +119,7 @@ pub const fn room16x16(s: &'static [u8]) -> [u32; 16] {
     buf
 }
 
-use crate::{CharDescription, RoomBlock, SpecialPosition, LowlevelCellType}; 
+use crate::{CharDescription, RoomBlock, UniqueItemPositionLowlevel, LowlevelCellType}; 
 
 const fn lookup_char<const N:usize>(c: u8, char_lookup:[CharDescription; N]) -> CharDescription {
     let mut j = 0;
@@ -134,7 +134,7 @@ const fn lookup_char<const N:usize>(c: u8, char_lookup:[CharDescription; N]) -> 
     }
 }
 
-pub const fn makearea<const N:usize>(s: &'static [u8], char_lookup:[CharDescription; N]) -> (RoomBlock, [Option<SpecialPosition>; 32]) {
+pub const fn makearea<const N:usize>(s: &'static [u8], char_lookup:[CharDescription; N]) -> (RoomBlock, [Option<UniqueItemPositionLowlevel>; 32]) {
     let mut buf = [[0u32; 16]; 32];
     let mut special_positions = [None; 32];
     let mut special_position_index = 0;
@@ -190,7 +190,7 @@ pub const fn makearea<const N:usize>(s: &'static [u8], char_lookup:[CharDescript
                 let within_room_y = lineidx % 8;
 
                 if matches!(upper, Special) {
-                    special_positions[special_position_index] = Some(SpecialPosition {
+                    special_positions[special_position_index] = Some(UniqueItemPositionLowlevel {
                         chr,
                         pos: (cellidx, 2*lineidx),
                         priority: false,
@@ -198,7 +198,7 @@ pub const fn makearea<const N:usize>(s: &'static [u8], char_lookup:[CharDescript
                     special_position_index+=1;
                 }
                 if matches!(lower, Special) {
-                    special_positions[special_position_index] = Some(SpecialPosition {
+                    special_positions[special_position_index] = Some(UniqueItemPositionLowlevel {
                         chr,
                         pos: (cellidx, 2*lineidx+1),
                         priority: false,
