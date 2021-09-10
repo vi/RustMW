@@ -95,3 +95,14 @@ pub enum TileTypeEnum {
     Ladder1Tile,
 }
 
+/// TODO: make this automatic somehow
+pub const fn tile_type_enum_eq(a: TileTypeEnum, b: TileTypeEnum) -> bool {
+    use TileTypeEnum::*;
+    match (a, b) {
+        (EmptyTile(..), EmptyTile(..)) => true,
+        (UsualArea1Tile(..), UsualArea1Tile(..)) => true,
+        (JumpyTile(..), JumpyTile(..)) => true,
+        (Ladder1Tile(..), Ladder1Tile(..)) => true,
+        _ => false,
+    }
+}

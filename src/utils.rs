@@ -194,7 +194,7 @@ pub const fn room16x16(s: &'static [u8]) -> [u32; 16] {
     buf
 }
 
-use crate::{Area, AreaSource, CharDescription, Level, LowlevelCellType, MAX_UNIQUE_ITEM_POSITIONS, MappingBetweenCharAndItem, MappingBetweenCharAndTileType, RoomBlock, RoomMetadata, TilePos, UniqueItem, UniqueItemPosition, UniqueItemPositionLowlevel, UniqueItemPositions, level, tiles::{self, TileTypeEnum}}; 
+use crate::{Area, AreaSource, CharDescription, Level, LowlevelCellType, MAX_UNIQUE_ITEM_POSITIONS, MappingBetweenCharAndItem, MappingBetweenCharAndTileType, RoomBlock, RoomMetadata, TilePos, UniqueItem, UniqueItemPosition, UniqueItemPositionLowlevel, UniqueItemPositions, level, tiles::{TileTypeEnum, tile_type_enum_eq}}; 
 
 const fn lookup_char<const N:usize>(c: u8, char_lookup:[CharDescription; N]) -> CharDescription {
     let mut j = 0;
@@ -206,6 +206,19 @@ const fn lookup_char<const N:usize>(c: u8, char_lookup:[CharDescription; N]) -> 
     }
     loop{
         b"Special character type not found"[999];
+    }
+}
+
+const fn lookup_tt<const N:usize>(c: u8, lookup:[MappingBetweenCharAndTileType; N]) -> TileTypeEnum {
+    let mut j = 0;
+    while j < lookup.len() {
+        if lookup[j].chr == c {
+            return lookup[j].tt;
+        }
+        j+=1;
+    }
+    loop{
+        b"Tile type not found for this charater"[999];
     }
 }
 
@@ -222,6 +235,12 @@ pub const fn makearea<const C:usize, const T:usize, const I:usize>(src: AreaSour
 
     let s = src.cells;
 
+    let mut meta = [RoomMetadata {
+        block_type_sp: Some(src.empty_tile_style),
+        block_type_x: Some(src.solid_tile_style),
+        block_type_a: None,
+        block_type_b: None,
+    }; 32];
 
     let mut i = 0;
     while i < s.len() {
@@ -249,6 +268,10 @@ pub const fn makearea<const C:usize, const T:usize, const I:usize>(src: AreaSour
                     b"Each line of the area must be exactly 128 characters long"[999];
                 }
                 
+                let room_x = cellidx / 16;
+                let room_y = lineidx / 8;
+                let roomidx = (room_y * 8 + room_x) as usize;
+
                 use LowlevelCellType::*;
                 let (upper,  lower) = match chr {
                     b' ' => (Empty, Empty),
@@ -257,12 +280,70 @@ pub const fn makearea<const C:usize, const T:usize, const I:usize>(src: AreaSour
                     b'X' => (Solid, Solid),
                     _ => {
                         let info = lookup_char(chr, src.char_lookup);
+                        
+                        match (info.upper, info.lower) {
+                            (CustomA, CustomB) | (CustomB, CustomA) => {
+                                b"This combination of low-level cell types is not allowed"[999];
+                            }
+                            _ => (),
+                        }
+
+                        match info.upper {
+                            Empty => (),
+                            Solid => (),
+                            Special => (),
+                            CustomA => {
+                                let tt = lookup_tt(chr, src.tile_lookup);
+                                match  meta[roomidx].block_type_a {
+                                    None => meta[roomidx].block_type_a = Some(tt),
+                                    Some(x) if tile_type_enum_eq(x, tt) => (),
+                                    _ => {
+                                        b"Room overloaded with special tile types for type A"[999];
+                                    }
+                                }
+                            }
+                            CustomB => {
+                                let tt = lookup_tt(chr, src.tile_lookup);
+                                match  meta[roomidx].block_type_b {
+                                    None => meta[roomidx].block_type_b = Some(tt),
+                                    Some(x) if tile_type_enum_eq(x, tt) => (),
+                                    _ => {
+                                        b"Room overloaded with special tile types for type B"[999];
+                                    }
+                                }
+                            }
+                        }
+
+                        match info.lower {
+                            Empty => (),
+                            Solid => (),
+                            Special => (),
+                            CustomA => {
+                                let tt = lookup_tt(chr, src.tile_lookup);
+                                match  meta[roomidx].block_type_a {
+                                    None => meta[roomidx].block_type_a = Some(tt),
+                                    Some(x) if tile_type_enum_eq(x, tt) => (),
+                                    _ => {
+                                        b"Room overloaded with special tile types for type A"[999];
+                                    }
+                                }
+                            }
+                            CustomB => {
+                                let tt = lookup_tt(chr, src.tile_lookup);
+                                match  meta[roomidx].block_type_b {
+                                    None => meta[roomidx].block_type_b = Some(tt),
+                                    Some(x) if tile_type_enum_eq(x, tt) => (),
+                                    _ => {
+                                        b"Room overloaded with special tile types for type B"[999];
+                                    }
+                                }
+                            }
+                        }
+                       
                         (info.upper, info.lower)
                     }
                 };
                 
-                let room_x = cellidx / 16;
-                let room_y = lineidx / 8;
                 let within_room_x = cellidx % 16;
                 let within_room_y = lineidx % 8;
 
@@ -283,8 +364,8 @@ pub const fn makearea<const C:usize, const T:usize, const I:usize>(src: AreaSour
                     special_position_index+=1;
                 }
 
-                buf[(room_y*8+room_x) as usize][(2*within_room_y+0) as usize] |= (upper.ll_code() as u32) << (within_room_x*2);
-                buf[(room_y*8+room_x) as usize][(2*within_room_y+1) as usize] |= (lower.ll_code() as u32) << (within_room_x*2);
+                buf[roomidx][(2*within_room_y+0) as usize] |= (upper.ll_code() as u32) << (within_room_x*2);
+                buf[roomidx][(2*within_room_y+1) as usize] |= (lower.ll_code() as u32) << (within_room_x*2);
 
 
                 cellidx+=1;
@@ -296,13 +377,6 @@ pub const fn makearea<const C:usize, const T:usize, const I:usize>(src: AreaSour
     if lineidx != 32 {
         b"There must by exactly 32 lines in each area"[999];
     }
-
-    let meta = [RoomMetadata {
-        block_type_sp: Some(TileTypeEnum::EmptyTile(tiles::EmptyTile)),
-        block_type_x: Some(TileTypeEnum::UsualArea1Tile(tiles::UsualArea1Tile)),
-        block_type_a: Some(TileTypeEnum::JumpyTile(tiles::JumpyTile)),
-        block_type_b: Some(TileTypeEnum::Ladder1Tile(tiles::Ladder1Tile)),
-    }; 32];
 
     (buf, special_positions, meta)
 }
