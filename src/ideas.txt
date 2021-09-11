@@ -22,3 +22,28 @@ Ultimate, last action:
 * `unsafe` - allow access to restricted areas and activate noclip.
 
 May trigger Undefined Behaviour mode (e.g. by staying in Unsafe mode too long), implemented as actual chaotic actions within WebAssembly memory, biased towards glitching specifically graphics and sounds.
+
+
+Collectible crates (just increase game completion counter without adding any features):
+
+* Gated behind "unsafe"
+  - libc
+  - abomonaition
+  - cxx
+* Usual
+  - serde
+  - clap
+  - rand
+  - bytes
+  - bitflags
+  - log
+  - slab
+  - im, im-rc
+* Gated begind "proc macro"
+  - structopt
+  - syn, quote
+  - proc_macro_hack
+  - derivative
+  - strum
+* Somewhat hidden:
+  - ...

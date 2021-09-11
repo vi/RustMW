@@ -1,4 +1,5 @@
 mod wasm4;
+use mapview::MapViewer;
 use tiles::TileTypeEnum;
 use wasm4::*;
 
@@ -10,6 +11,7 @@ mod player;
 mod tiles;
 mod world;
 mod unique_items;
+mod mapview;
 
 use camera::Camera;
 use world::World;
@@ -122,8 +124,7 @@ pub struct MappingBetweenCharAndTileType {
 }
 
 
-struct State {
-    prevpad: u8,
+struct Game {
     frame: u8,
 
     camera: Camera,
@@ -132,10 +133,9 @@ struct State {
     world: World,
 }
 
-impl State {
-    pub const fn new() -> State {
-        let s = State {
-            prevpad: 0,
+impl Game {
+    pub const fn new() -> Game {
+        let s = Game {
             frame: 0,
             camera: Camera::new(),
             player: Player::new(),
@@ -144,12 +144,10 @@ impl State {
         s
     }
 
-    pub fn tick(&mut self) {
+    pub fn tick(&mut self, gamepad: u8, prev_gamepad: u8) -> MainState {
         unsafe {
             *PALETTE = [0, 0x808080, 0xFFFFFF, 0x8080FF];
         }
-
-        let gamepad = unsafe { *GAMEPAD1 };
 
         let mut inhibit_drawing_player = false;
 
@@ -158,7 +156,7 @@ impl State {
             self.camera.pos = self.player.pos;
         }
 
-        self.player.control(self.prevpad, gamepad);
+        let newstate = self.player.control(prev_gamepad, gamepad);
 
         #[allow(unused_variables)]
         let mut iterations_counter = 0;
@@ -208,16 +206,50 @@ impl State {
             self.player.draw(self.frame, gamepad, &self.camera);
         }
 
-        self.prevpad = gamepad;
         self.frame = self.frame.wrapping_add(1);
+        newstate
     }
 }
 
-static mut STATE: State = State::new();
+
+enum MainState {
+    Game,
+    Map,
+}
+
+pub struct GlobalState {
+    main_state: MainState,
+    game: Game,
+    map_viewer: MapViewer,
+
+    previous_gamepad: u8,
+}
+
+impl GlobalState {
+    pub const fn new() -> GlobalState {
+        GlobalState {
+            main_state: MainState::Game,
+            game: Game::new(),
+            map_viewer: MapViewer::new(),
+            previous_gamepad: 0,
+        }
+    }
+
+    pub fn tick(&mut self, gamepad_state: u8) {
+        self.main_state = match self.main_state {
+            MainState::Game => self.game.tick(gamepad_state, self.previous_gamepad),
+            MainState::Map => self.map_viewer.tick(gamepad_state, self.previous_gamepad),
+        };
+        self.previous_gamepad = gamepad_state;
+    }
+}
+
+
+static mut GLOBAL_STATE : GlobalState = GlobalState::new();
 
 #[no_mangle]
 fn update() {
     unsafe {
-        STATE.tick();
+        GLOBAL_STATE.tick(*GAMEPAD1);
     }
 }

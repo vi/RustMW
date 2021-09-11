@@ -1,7 +1,7 @@
 
 use crate::tiles::{CollisionSegment, TileType};
-use crate::{Camera, TilePos, cf32};
-use crate::wasm4::{BLIT_1BPP, BUTTON_2, BUTTON_DOWN, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_UP, SCREEN_SIZE, blit, line};
+use crate::{Camera, MainState, TilePos, cf32};
+use crate::wasm4::{BLIT_1BPP, BUTTON_1, BUTTON_2, BUTTON_DOWN, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_UP, SCREEN_SIZE, blit, line};
 use crate::World;
 use crate::utils::draw_colours;
 use crate::sprites;
@@ -45,9 +45,13 @@ impl Player {
         };
         strength
     }
-    pub fn control(&mut self, prev: u8, cur: u8) {
+    pub fn control(&mut self, prev: u8, cur: u8) -> MainState {
         let mut dir = cf32::new(0.0, 0.0);
         let mut movpower : f32 = 0.0;
+
+        if (cur & !prev) & BUTTON_1 != 0{
+            return MainState::Map;
+        }
 
         let mut do_jump_now = false;
         if prev & BUTTON_2 != 0 {
@@ -156,6 +160,7 @@ impl Player {
         if self.grounded && self.vel.re.abs() > 5.0 {
             self.anim_timer += std::num::Wrapping(1);
         }
+        MainState::Game
     }
     fn repel_tile(&mut self, tile_center: cf32, config: &[CollisionSegment], acceleration: &mut cf32) {
         const DEBUG_REPEL : bool = false;
