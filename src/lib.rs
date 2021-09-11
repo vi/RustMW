@@ -15,9 +15,6 @@ use camera::Camera;
 use world::World;
 use player::Player;
 
-use ufmt::uwrite;
-use utils::{draw_colours, UfmtBuf};
-
 use num_complex::Complex32 as cf32;
 
 
@@ -124,32 +121,6 @@ pub struct MappingBetweenCharAndTileType {
     tt: TileTypeEnum,
 }
 
-struct TextBox {
-    c: u8,
-}
-
-impl TextBox {
-    const fn new() -> TextBox {
-        TextBox { c: 2 }
-    }
-
-    fn control(&mut self, prev: u8, cur: u8) {
-        if (cur & !prev) & BUTTON_1 != 0 {
-            self.c += 1;
-            if self.c > 4 {
-                self.c = 2;
-            }
-        }
-    }
-
-    fn draw(&self, _global_frame: u8) {
-        draw_colours(self.c, 0, 0, 0);
-        let mut buf = UfmtBuf::<11>::new();
-        let _ = uwrite!(buf, "{}", 33);
-        text(buf.as_str(), 10, 10);
-    }
-}
-
 
 struct State {
     prevpad: u8,
@@ -157,7 +128,6 @@ struct State {
 
     camera: Camera,
     player: Player,
-    textbox: TextBox,
 
     world: World,
 }
@@ -169,7 +139,6 @@ impl State {
             frame: 0,
             camera: Camera::new(),
             player: Player::new(),
-            textbox: TextBox::new(),
             world: World::new(),
         };
         s
@@ -181,6 +150,8 @@ impl State {
         }
 
         let gamepad = unsafe { *GAMEPAD1 };
+
+        let mut inhibit_drawing_player = false;
 
         if !self.player.pos.is_normal() {
             self.player.pos = World::from_world_coords(LEVEL.unique_item_pos(UniqueItem::PlayerStart));
@@ -222,8 +193,6 @@ impl State {
         }
         //crate::traceln!("iters {}", iterations_counter);
 
-        self.textbox.control(self.prevpad, gamepad);
-
         self.camera.update(&self.player, gamepad);
         World::draw(self.frame, self.player.my_world_coords(), &self.camera);
         
@@ -231,12 +200,13 @@ impl State {
         let playpos = World::to_world_coords(self.player.pos);
         for item in World::get_unique_items_around_tile(campos) {
             if let Some(item) = item {
-                unique_items::draw_unique(item, self.frame, playpos, &self.camera);
+                unique_items::draw_unique(item, self.frame, playpos, &self.camera, &mut inhibit_drawing_player);
             }
         }
 
-        self.player.draw(self.frame, gamepad, &self.camera);
-        self.textbox.draw(self.frame);
+        if ! inhibit_drawing_player {
+            self.player.draw(self.frame, gamepad, &self.camera);
+        }
 
         self.prevpad = gamepad;
         self.frame = self.frame.wrapping_add(1);

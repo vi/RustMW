@@ -69,8 +69,8 @@ impl World {
 
         let minrx = room_x.saturating_sub(1);
         let minry = room_y.saturating_sub(1);
-        let mut maxrx = room_x + 1; if maxrx > 8 { maxrx = 8; }
-        let mut maxry = room_y + 1; if maxry > 4 { maxry = 4; }
+        let mut maxrx = room_x + 1; if maxrx >= 8 { maxrx = 7; }
+        let mut maxry = room_y + 1; if maxry >= 4 { maxry = 3; }
 
         let mut y : u16 = minry;
         while y <= maxry {
