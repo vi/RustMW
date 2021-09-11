@@ -285,7 +285,7 @@ impl Player {
             *acceleration += chosen_vector.scale(scale);
         }
     }
-    pub fn handle_collisions(&mut self, r: &World, acceleration: &mut cf32 ) {
+    pub fn handle_collisions(&mut self, acceleration: &mut cf32 ) {
         self.ground_level_score = 0.3; // do not touch ground level if it is detected this steep;
         //rp(cf32::new(70.0, 100.0));
         //return;
@@ -298,7 +298,7 @@ impl Player {
         for y in yy..(yy+3) {
             for x in xx..(xx+3) {
                 if x == myx && y == myy { continue }
-                let tiletype = r.get_tile((x, y));
+                let tiletype = World::get_tile((x, y));
                 self.repel_tile(World::from_world_coords((x,y)), tiletype.collision_configuration(), acceleration);
             }
         }

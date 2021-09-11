@@ -94,3 +94,32 @@ pub static LADDER1: [u8; 8] = sprite8x8(
 ",
 );
  
+
+
+
+pub static INFOBOX1: [u8; 8] = sprite8x8(
+    b"
+    |. . .   X . . .|
+    |. X           X|
+    |. X   X X     X|
+    |. X     X     X|
+    |. X   X X X   X|
+    |. X           X|
+    |.   X X X X X .|
+    |. . . . . . . .|
+",
+);
+
+
+pub static INFOBOX2: [u8; 8] = sprite8x8(
+    b"
+    |. . .   X . . .|
+    |.              |
+    |.     X X      |
+    |.       X      |
+    |.     X X X    |
+    |.              |
+    |.             .|
+    |. . . . . . . .|
+",
+);

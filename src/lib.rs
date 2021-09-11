@@ -42,7 +42,7 @@ pub enum UniqueItem {
 
 pub type TilePos = (u16, u16);
 
-struct Level {
+pub struct Level {
     the_area: Area,
     unique_items: [(UniqueItem, TilePos); UniqueItem::VARIANT_COUNT],
 }
@@ -67,7 +67,7 @@ pub struct AreaSource<const C: usize, const T:usize, const I:usize> {
     item_lookup: [MappingBetweenCharAndItem; I],
 }
 
-static LEVEL : Level = Level::new();
+pub const LEVEL : Level = Level::new();
 
 #[derive(Clone, Copy)]
 pub enum LowlevelCellType {
@@ -159,7 +159,7 @@ struct State {
     player: Player,
     textbox: TextBox,
 
-    room: World,
+    world: World,
 }
 
 impl State {
@@ -170,7 +170,7 @@ impl State {
             camera: Camera::new(),
             player: Player::new(),
             textbox: TextBox::new(),
-            room: World::new(),
+            world: World::new(),
         };
         s
     }
@@ -198,7 +198,7 @@ impl State {
             //self.player.ground_force_direction += cf32::new(0.0, -0.02);
             
             let mut acceleration = cf32::new(0.0, 0.0);
-            self.player.handle_collisions(&self.room, &mut acceleration);
+            self.player.handle_collisions(&mut acceleration);
             self.player.movement(&mut acceleration);
             
             let vel_estimate1 = self.player.vel.norm();
@@ -225,8 +225,16 @@ impl State {
         self.textbox.control(self.prevpad, gamepad);
 
         self.camera.update(&self.player, gamepad);
-        self.room
-            .draw(self.frame, self.player.my_world_coords(), &self.camera);
+        World::draw(self.frame, self.player.my_world_coords(), &self.camera);
+        
+        let campos = World::to_world_coords(self.camera.pos);
+        let playpos = World::to_world_coords(self.player.pos);
+        for item in World::get_unique_items_around_tile(campos) {
+            if let Some(item) = item {
+                unique_items::draw_unique(item, self.frame, playpos, &self.camera);
+            }
+        }
+
         self.player.draw(self.frame, gamepad, &self.camera);
         self.textbox.draw(self.frame);
 
