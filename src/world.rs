@@ -13,6 +13,8 @@ impl World {
         }
     }
 
+    pub const BOTTOM_RIGHT_TILE: TilePos = (16*8, 16*4);
+
     pub fn draw(_global_frame: u8, player_coords:TilePos, cam: &Camera) {
         let (camx, camy) = World::to_world_coords(cam.pos);
         let minx = camx.saturating_sub(9);
@@ -36,7 +38,7 @@ impl World {
     }
 
     pub fn get_tile((x,y): TilePos) -> TileTypeEnum {
-        if x >= 16*8 || y >= 16*4 {
+        if x >= World::BOTTOM_RIGHT_TILE.0 || y >= World::BOTTOM_RIGHT_TILE.1 {
             return tiles::EmptyTile.into();
         }
 
@@ -60,7 +62,7 @@ impl World {
         let mut found_items = [None; MAX_UNIQUE_ITEMS_PER_ROOM*9];
         let mut i = 0;
 
-        if x >= 16*8 || y >= 16*4 {
+        if x >= World::BOTTOM_RIGHT_TILE.0 || y >= World::BOTTOM_RIGHT_TILE.1 {
             return found_items;
         }
 

@@ -29,10 +29,10 @@ pub const AREA1: (Area, UniqueItemPositions) = Area::build(AreaSource {
     item_lookup: unique_items_mapping![(PlayerStart s) (PlayerStart! S) (Info1 i)],
     cells: b"                                                                                                       <
 |` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           |
-|        `               `               `               `               `               `               `               `       |
+|        `  S            `               `               `               `               `               `               `       |
 |XXXX       ,     XXX                            XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    |
 |XXXX     s                                      XXXX            XXXX            XXXX            XXXX            XXXX            |
-|X                                                          S   XX              XX              XX              XX              X|
+|X                                                              XX              XX              XX              XX              X|
 |X   ,``  `,    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX````X  X  XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    X|
 |X ,`           XX ,`           XX ,`           XX ,`     X  X  XX ,`           XX ,`           XX ,`           XX ,`           X|
 |XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXX  XJJXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXX|

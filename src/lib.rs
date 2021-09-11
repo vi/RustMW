@@ -124,13 +124,13 @@ pub struct MappingBetweenCharAndTileType {
 }
 
 
-struct Game {
+pub struct Game {
     frame: u8,
 
-    camera: Camera,
-    player: Player,
+    pub camera: Camera,
+    pub player: Player,
 
-    world: World,
+    pub world: World,
 }
 
 impl Game {
@@ -212,7 +212,7 @@ impl Game {
 }
 
 
-enum MainState {
+pub enum MainState {
     Game,
     Map,
 }
@@ -238,7 +238,7 @@ impl GlobalState {
     pub fn tick(&mut self, gamepad_state: u8) {
         self.main_state = match self.main_state {
             MainState::Game => self.game.tick(gamepad_state, self.previous_gamepad),
-            MainState::Map => self.map_viewer.tick(gamepad_state, self.previous_gamepad),
+            MainState::Map => self.map_viewer.tick(gamepad_state, self.previous_gamepad, &self.game),
         };
         self.previous_gamepad = gamepad_state;
     }

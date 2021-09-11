@@ -16,6 +16,7 @@ pub struct CollisionSegment {
 pub trait TileType {
     fn collision_configuration(self) -> &'static [CollisionSegment];
     fn sprite(self) -> Option<&'static [u8; 8]>;
+    fn map_viewer_colour(self) -> u8;
 }
 
 
@@ -28,6 +29,9 @@ impl TileType for EmptyTile {
     }
     fn sprite(self) -> Option<&'static [u8; 8]> {
         None
+    }
+    fn map_viewer_colour(self) -> u8 {
+        0
     }
 }
 
@@ -47,6 +51,9 @@ impl TileType for UsualArea1Tile {
     fn sprite(self) -> Option<&'static [u8; 8]> {
         Some(&sprites::SOLIDTILE)
     }
+    fn map_viewer_colour(self) -> u8 {
+        1
+    }
 }
 
 
@@ -65,6 +72,9 @@ impl TileType for JumpyTile {
     fn sprite(self) -> Option<&'static [u8; 8]> {
         Some(&sprites::JUMPYTILE)
     }
+    fn map_viewer_colour(self) -> u8 {
+        1
+    }
 }
 
 
@@ -82,6 +92,9 @@ impl TileType for Ladder1Tile {
     }
     fn sprite(self) -> Option<&'static [u8; 8]> {
         Some(&sprites::LADDER1)
+    }
+    fn map_viewer_colour(self) -> u8 {
+        1
     }
 }
 
