@@ -1,3 +1,27 @@
+#![allow(unconditional_panic)]
+#![allow(clippy::no_effect)]
+#![allow(clippy::identity_op)]
+
+//! Glossary:
+//!
+//! * Tile, cell - Square block, from which the level is made of. Addressed by (u16,u16) i.e. TilePos
+//! * Character - a character of input string for level-building `const fn`s. It maps to two tiles: upper and lower.
+//! * Low-level tile type - two-bit number of which the bulk of the level is built from.
+//!          00 - empty (permeable) cell, 01 - solid (steppable) cell, 10 and 11 - custom cell types A and B.
+//!          At `const fn` construction time there is fifth type "Special" that triggers placement of
+//!          special item, leaving empty cells behind it instead.
+//! * Custom cell - Tile for which room metadata mapping should be used to determine the actual cell type.
+//!          low-level custom cell types may map to specific high-level tile types on room granularity while
+//!          empty and solid cells maps to specific high-level tile types on area granularity
+//! * Level - Set of all tiles in the game
+//! * Area - a 8x4 block of rooms - one "unit of compilation" of the level
+//! * Room - a 16x16 block of tiles
+//! * Special item, unique item, item - One-of-a-kind game objects that should be placed on the level exactly once.
+//!          Although there can be only one of each item, you can temporarily override its position using special `!` mode of mapping.
+//!          This overriding should affects only compile-time `const fn` world, not the actual code.
+//! * Room metadata - per-room mapping from low-level to high-level tile types
+//! * High-level tile type - Sprite, map representation and physics behaviour of a tile
+
 mod wasm4;
 use mapview::MapViewer;
 use tiles::TileTypeEnum;
