@@ -82,9 +82,9 @@ impl TileType for JumpyTile {
 #[derive(Clone, Copy)]
 pub struct Ladder1Tile;
 static LADDER1_TILE : [CollisionSegment; 3] = [
-    CollisionSegment{rp1: cf32::new(-3.0,  -3.0), rp2: cf32::new(3.0,   3.0), rad:1.5, el: 0.01},
-    CollisionSegment{rp1: cf32::new( 3.0,   3.0), rp2: cf32::new(-3.0,  3.0), rad:1.5, el: 0.01},
-    CollisionSegment{rp1: cf32::new(-3.0,   3.0), rp2: cf32::new(-3.0, -3.0), rad:1.5, el: 0.01},
+    CollisionSegment{rp1: cf32::new(-4.0,  -4.0), rp2: cf32::new(4.0,   4.0), rad:1.5, el: 0.01},
+    CollisionSegment{rp1: cf32::new( 4.0,   4.0), rp2: cf32::new(-4.0,  4.0), rad:1.5, el: 0.01},
+    CollisionSegment{rp1: cf32::new(-4.0,   4.0), rp2: cf32::new(-4.0, -4.0), rad:1.5, el: 0.01},
 ];
 impl TileType for Ladder1Tile {
     fn collision_configuration(self) -> &'static [CollisionSegment] {

@@ -24,12 +24,12 @@ pub const AREA1: (Area, UniqueItemPositions) = Area::build(AreaSource {
     //    `B` ...               B, ...
     //        Same character cannot have both A and B in it. Individual room cannot assign different tile mappings to A or B.
     //    `!` - position of a unique item. In area itself it is an empty tile.
-    char_lookup: ll_char_descriptions::<7>(b"s!. J.A jAX l.B LBX S!. i.!"),
+    char_lookup: ll_char_descriptions::<8>(b"s!. J.A jAX l.B LBX S!. i.!  M!."),
     tile_lookup: tile_types_mapping![(JumpyTile J j) (Ladder1Tile L l)],
-    item_lookup: unique_items_mapping![(PlayerStart s) (PlayerStart! S) (Info1 i)],
+    item_lookup: unique_items_mapping![(PlayerStart s) (PlayerStart! S) (Info1 i) (SmallSize M)],
     cells: b"                                                                                                       <
 |` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           |
-|        `  S            `               `               `               `               `               `               `       |
+|        `               `               `               `               `               `               `               `       |
 |XXXX       ,     XXX                            XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    |
 |XXXX     s                                      XXXX            XXXX            XXXX            XXXX            XXXX            |
 |X                                                              XX              XX              XX              XX              X|
@@ -46,9 +46,9 @@ pub const AREA1: (Area, UniqueItemPositions) = Area::build(AreaSource {
 |XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXX,                 X,XXX  X XXXXXXXX,XXXXXXXXXXX    X XXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXX|
 |` ```           ` ```           XXX`            ` ```    X  X   ` ```   XXXXXXXXXXXX  X XXXX    ` ```           ` ```           |
 |        `               `       XXXXLl                   X  X           XXXXXXXXXX    X XXXX            `               `       |
-|XXXX       ,    XXXX       ,    XXXXXXLl                 X  X                  `X  ,XXX XXXX    XXXX       ,    XXXX       ,    |
+|XXXX       ,    XXXX       ,    XXXXXXLl     M           X  X                  `X  ,XXX XXXX    XXXX       ,    XXXX       ,    |
 |XXXX            XXXX            XXXXXXXXLl                      XXXX    XXXXXX     XXXX XXXX    XXXX            XXXX            |
-|X              XX              XX   XXXXXXLl                   XX       XXXXXXXXXX XXXX XXXX   XX              XX              X|
+|X              XX              XX   XXXXXXLl                  SXX       XXXXXXXXXX XXXX XXXX   XX              XX              X|
 |X   ,``  `,    XX   ,``  `,    XX   XXXXXXXXXLl          jjj   XX   ,`` XXXXXXXXX  XXXX XXXX   XX   ,``  `,    XX   ,``  `,    X|
 |X ,`           XX ,`           XX ,`XXXXXXXXXXXXXXl         i  XX ,`    XXXXXXXXX XXXXX XXXX   XX ,`           XX ,`           X|
 |XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXX XXXXX XXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXX|

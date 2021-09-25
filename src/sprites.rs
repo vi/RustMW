@@ -1,5 +1,5 @@
 use crate::utils::{sprite8x8,sprite16x16};
-pub static _WHEEL: [u8; 8] = sprite8x8(
+pub static WHEEL_S: [u8; 8] = sprite8x8(
     b"
     |. X . . X . . .|
     |. . X X X X . X|
@@ -121,5 +121,34 @@ pub static INFOBOX2: [u8; 8] = sprite8x8(
     |.              |
     |.             .|
     |. . . . . . . .|
+",
+);
+
+
+
+pub static STAR1: [u8; 8] = sprite8x8(
+    b"
+    |. . . X   . . .|
+    |.     X X      |
+    |X X X X X X X X|
+    |. X X X X X X  |
+    |.   X X X X    |
+    |. X X   X X X  |
+    |. X X     X X .|
+    |X . . . . . . X|
+",
+);
+
+
+pub static STAR2: [u8; 8] = sprite8x8(
+    b"
+    |. . X     . .  |
+    |.   X X   X X  |
+    |    X X X X X  |
+    |. X X X X X    |
+    |X X X X X X X  |
+    |.   X X X X X X|
+    |.   X X   X   .|
+    |    X . . . .  |
 ",
 );

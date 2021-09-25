@@ -1,10 +1,11 @@
-use crate::{LEVEL, TilePos, camera::Camera, cf32, sprites::{INFOBOX1, INFOBOX2}, utils::draw_colours, wasm4::{SCREEN_SIZE, blit, rect, text}, world::World};
+use crate::{LEVEL, TilePos, camera::Camera, cf32, sprites::{INFOBOX1, INFOBOX2, STAR1, STAR2}, utils::draw_colours, wasm4::{SCREEN_SIZE, blit, rect, text}, world::World};
 
 
 #[derive(variant_count::VariantCount, PartialEq, Eq, Copy, Clone)]
 pub enum UniqueItem {
     PlayerStart,
     Info1,
+    SmallSize,
 }
 
 const fn bitfield_len(x: usize) -> usize {
@@ -55,16 +56,21 @@ pub fn draw_unique(item: UniqueItem, frame: u8, player_pos: TilePos, cam: &Camer
     }
     let (x, y) = (center.re as i32, center.im as i32);
 
-    let blinker = frame % 60 < 30;
+    let mut blinker = frame % 60 < 30;
 
-    draw_colours(3,0,0,0);
+
+    if touched {
+        blinker = false;
+        draw_colours(2,0,0,0);
+    } else {
+        draw_colours(3,0,0,0);
+    }
 
     use UniqueItem::*;
     match (item, touched, touched_now, blinker) {
-        (Info1, false, false, false) => blit(&INFOBOX1, x-4, y-4, 8, 8, 0),
-        (Info1, true, false, _) => blit(&INFOBOX1, x-4, y-4, 8, 8, 0),
-        (Info1, false, false, true) => blit(&INFOBOX2, x-4, y-4, 8, 8, 0),
-        (Info1, true, true, _) => {
+        (Info1, _, false, false) => blit(&INFOBOX1, x-4, y-4, 8, 8, 0),
+        (Info1, _, false, true) => blit(&INFOBOX2, x-4, y-4, 8, 8, 0),
+        (Info1, _, true, _) => {
             *inhibit_drawing_player = true;
             draw_colours(2, 0,0,0);
             rect(10, 10, SCREEN_SIZE-20, SCREEN_SIZE-20);
@@ -74,6 +80,8 @@ pub fn draw_unique(item: UniqueItem, frame: u8, player_pos: TilePos, cam: &Camer
             draw_colours(3, 0, 0, 0);
             text("Welcome to\nRustMW", 14, 14);
         }
+        (SmallSize, _, _, false) => blit(&STAR1, x-4, y-4, 8, 8, 0),
+        (SmallSize, _, _, true) => blit(&STAR2, x-4, y-4, 8, 8, 0),
         _ => (),
     }
 }

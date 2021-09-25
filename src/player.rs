@@ -1,7 +1,7 @@
 
 use crate::tiles::{CollisionSegment, TileType};
 use crate::{Camera, MainState, TilePos, cf32};
-use crate::wasm4::{BLIT_1BPP, BUTTON_1, BUTTON_2, BUTTON_DOWN, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_UP, SCREEN_SIZE, blit, line};
+use crate::wasm4::{BLIT_1BPP, BLIT_FLIP_X, BUTTON_1, BUTTON_2, BUTTON_DOWN, BUTTON_LEFT, BUTTON_RIGHT, BUTTON_UP, SCREEN_SIZE, blit, line};
 use crate::World;
 use crate::utils::draw_colours;
 use crate::sprites;
@@ -226,7 +226,10 @@ impl Player {
             }
         }
 
-        let mut radius = 1.5;
+        let mut radius = 3.0;
+        if self.status.is_touched(crate::UniqueItem::SmallSize) {
+            radius = 1.5;
+        }
         let feather = 3.0;
         radius += chosen_segment.rad;
 
@@ -346,11 +349,19 @@ impl Player {
     pub fn draw(&self, _global_frame: u8, keys: u8, cam: &Camera) {
         draw_colours(3, 0, 0, 0);
         let onscreen = self.pos - cam.pos + cf32::new(0.5, 0.5) * SCREEN_SIZE as f32;
-        if self.anim_timer.0 & 0x1F < 16 {
-            blit(&sprites::WHEEL1, onscreen.re as i32 - 8, onscreen.im as i32 - 8, 16, 16, BLIT_1BPP);
+        if self.status.is_touched(crate::UniqueItem::SmallSize) {
+            if self.anim_timer.0 & 0x1F < 16 {
+                blit(&sprites::WHEEL_S, onscreen.re as i32 - 4, onscreen.im as i32 - 4, 8, 8, BLIT_1BPP);
+            } else {
+                blit(&sprites::WHEEL_S, onscreen.re as i32 - 4, onscreen.im as i32 - 4, 8, 8, BLIT_1BPP|BLIT_FLIP_X);
+            }
         } else {
-            blit(&sprites::WHEEL2, onscreen.re as i32 - 8, onscreen.im as i32 - 8, 16, 16, BLIT_1BPP);
-        };
+            if self.anim_timer.0 & 0x1F < 16 {
+                blit(&sprites::WHEEL1, onscreen.re as i32 - 8, onscreen.im as i32 - 8, 16, 16, BLIT_1BPP);
+            } else {
+                blit(&sprites::WHEEL2, onscreen.re as i32 - 8, onscreen.im as i32 - 8, 16, 16, BLIT_1BPP);
+            };
+        }
         if let Some(jump_dir) = self.jump_dir {
             if self.grounded {
                 draw_colours(4, 0, 0, 0);
