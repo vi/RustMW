@@ -1,5 +1,6 @@
-use crate::{Game, MainState, TilePos, wasm4::{BUTTON_1, FRAMEBUFFER, PALETTE, SCREEN_SIZE}, world::World};
+use crate::{Game, MainState, TilePos, UniqueItem, wasm4::{BUTTON_1, FRAMEBUFFER, PALETTE, SCREEN_SIZE}, world::World};
 use crate::tiles::TileType;
+use enum_iterator::IntoEnumIterator;
 
 pub struct MapViewer {
     upper_left_tile: TilePos,
@@ -62,20 +63,16 @@ impl MapViewer {
             }
         }
 
+        for item in UniqueItem::into_enum_iter() {
+            let itempos = item.get_pos();
+            if game.player.status.is_touched(item) || self.blinker < 30 {
+                self.set_pixel(itempos, 0b11);
+            }
+        }
+
         if self.blinker < 30 {
             let playerpos = World::to_world_coords(game.player.pos);
-            match (playerpos.0.checked_sub(self.upper_left_tile.0), playerpos.1.checked_sub(self.upper_left_tile.1)) {
-                (Some(x), Some(y)) if x < SCREEN_SIZE as u16 && y < SCREEN_SIZE as u16 => {
-                    let offset = ((SCREEN_SIZE * y as u32 >> 2) + (x as u32>>2)) as isize;
-                    let shift = (x & 0b11) << 1;
-                    let bitmask = 0b11 << shift;
-                    unsafe {
-                        let ptr = (FRAMEBUFFER as *mut u8).offset(offset);
-                        ptr.write((ptr.read() & !bitmask) | (0b10 << shift) );
-                    }
-                }
-                _ => (),
-            }
+            self.set_pixel(playerpos, 0b10);
         }
 
 
@@ -84,5 +81,20 @@ impl MapViewer {
             self.blinker = 0;
         }
         MainState::Map
+    }
+
+    fn set_pixel(&self, pos: TilePos, colour: u8) {
+        match (pos.0.checked_sub(self.upper_left_tile.0), pos.1.checked_sub(self.upper_left_tile.1)) {
+            (Some(x), Some(y)) if x < SCREEN_SIZE as u16 && y < SCREEN_SIZE as u16 => {
+                let offset = ((SCREEN_SIZE * y as u32 >> 2) + (x as u32>>2)) as isize;
+                let shift = (x & 0b11) << 1;
+                let bitmask = 0b11 << shift;
+                unsafe {
+                    let ptr = (FRAMEBUFFER as *mut u8).offset(offset);
+                    ptr.write((ptr.read() & !bitmask) | (colour << shift) );
+                }
+            }
+            _ => (),
+        }
     }
 }

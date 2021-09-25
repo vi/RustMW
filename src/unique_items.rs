@@ -1,11 +1,17 @@
 use crate::{LEVEL, TilePos, camera::Camera, cf32, sprites::{INFOBOX1, INFOBOX2, STAR1, STAR2}, utils::draw_colours, wasm4::{SCREEN_SIZE, blit, rect, text}, world::World};
 
 
-#[derive(variant_count::VariantCount, PartialEq, Eq, Copy, Clone)]
+#[derive(variant_count::VariantCount, PartialEq, Eq, Copy, Clone, enum_iterator::IntoEnumIterator)]
 pub enum UniqueItem {
     PlayerStart,
     Info1,
     SmallSize,
+}
+
+impl UniqueItem {
+    pub fn get_pos(self) -> TilePos {
+        LEVEL.unique_item_pos(self)
+    }
 }
 
 const fn bitfield_len(x: usize) -> usize {
