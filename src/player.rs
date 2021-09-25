@@ -19,6 +19,8 @@ pub struct Player {
     /// To move better diagonally when we are on a slope
     pub ground_level: cf32,
     ground_level_score: f32,
+
+    pub status: crate::TouchedUniqueItems,
 }
 
 impl Player {
@@ -33,6 +35,7 @@ impl Player {
             remembered_jump: 0,
             ground_level: cf32::new(1.0, 0.0),
             ground_level_score: 0.3,
+            status: crate::TouchedUniqueItems::new(),
         }
     }
     pub fn jump_strength(cur: u8) -> f32 {

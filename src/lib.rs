@@ -22,6 +22,9 @@
 //! * Room metadata - per-room mapping from low-level to high-level tile types
 //! * High-level tile type - Sprite, map representation and physics behaviour of a tile
 
+
+// TODO: use `gridly`?
+
 mod wasm4;
 use mapview::MapViewer;
 use tiles::TileTypeEnum;
@@ -43,6 +46,8 @@ use player::Player;
 
 use num_complex::Complex32 as cf32;
 
+pub use unique_items::UniqueItem;
+pub use unique_items::TouchedUniqueItems;
 
 type RoomData = [u32; 16];
 
@@ -56,12 +61,6 @@ pub struct RoomMetadata {
 
 // 8x4 block of rooms
 type RoomBlock = [RoomData; 32];
-
-#[derive(variant_count::VariantCount, PartialEq, Eq, Copy, Clone)]
-pub enum UniqueItem {
-    PlayerStart,
-    Info1,
-}
 
 pub type TilePos = (u16, u16);
 
@@ -222,7 +221,7 @@ impl Game {
         let playpos = World::to_world_coords(self.player.pos);
         for item in World::get_unique_items_around_tile(campos) {
             if let Some(item) = item {
-                unique_items::draw_unique(item, self.frame, playpos, &self.camera, &mut inhibit_drawing_player);
+                unique_items::draw_unique(item, self.frame, playpos, &self.camera, &mut inhibit_drawing_player, &mut self.player.status);
             }
         }
 
