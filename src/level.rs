@@ -31,34 +31,34 @@ pub const AREA1: (Area, UniqueItemPositions) = Area::build(AreaSource {
 |` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           ` ```           |
 |        `               `               `               `               `               `               `               `       |
 |XXXX       ,     XXX                            XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    |
-|XXXX     s                                      XXXX            XXXX            XXXX            XXXX            XXXX            |
+|XXXX                                            XXXX            XXXX            XXXX            XXXX            XXXX            |
 |X                                                              XX              XX              XX              XX              X|
-|X   ,``  `,    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX````X  X  XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    X|
-|X ,`           XX ,`           XX ,`           XX ,`     X  X  XX ,`           XX ,`           XX ,`           XX ,`           X|
-|XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXX  XJJXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXX|
-|` ```           ` ```           ` ```           ` ```    X  X   ` ```           ` ```           ` ```           ` ```           |
-|        `               `               `               `X  X           `     XXX       `               `               `       |
-|XXXX       ,    XXXX       ,    XXXX       ,    XXXX     X  X   XXXX       ,  XXXXXX       ,    XXXX       ,    XXXX       ,    |
-|XXXX            XXXX            XXXX            XXXX     X  X   XXXX    XXXXXXXXXXXX  X XXXX    XXXX            XXXX            |
-|X              XX              XX              XX        X  X  XX       XXXXXXXXXXX`  X XXXX   XX              XX              X|
-|X   ,``  `,    XX   ,``  `,    XX   ,`               ``  X  X  XX   ,`` XXXXXXXXXX   jX XXXX   XX   ,``  `,    XX   ,``  `,    X|
-|X ,`           XX ,`           XX ,`                     X  X  XX ,`    XXXXXXXXXX  XXX XXXX   XX ,`           XX ,`           X|
-|XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXX,                 X,XXX  X XXXXXXXX,XXXXXXXXXXX    X XXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXX|
-|` ```           ` ```           XXX`            ` ```    X  X   ` ```   XXXXXXXXXXXX  X XXXX    ` ```           ` ```           |
-|        `               `       XXXXLl                   X  X           XXXXXXXXXX    X XXXX            `               `       |
-|XXXX       ,    XXXX       ,    XXXXXXLl     M           X  X    S G           `X  ,XXX XXXX    XXXX       ,    XXXX       ,    |
-|XXXX            XXXX            XXXXXXXXLl                      XXXX    XXXXXX     XXXX XXXX    XXXX            XXXX            |
-|X              XX              XX   XXXXXXLl                   XX       XXXXXXXXXX XXXX XXXX   XX              XX              X|
-|X   ,``  `,    XX   ,``  `,    XX   XXXXXXXXXLl          jjj   XX   ,`` XXXXXXXXX  XXXX XXXX   XX   ,``  `,    XX   ,``  `,    X|
-|X ,`           XX ,`           XX ,`XXXXXXXXXXXXXXl         i  XX ,`    XXXXXXXXX XXXXX XXXX   XX ,`           XX ,`           X|
-|XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXX XXXXX XXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXX|
-|` ```           ` ```           ` ```           ` ```           ` ```   XXXXXX  ` XXXXX XXXX    ` ```           ` ```           |
-|        `               `               `               `               `               `               `               `       |
-|XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    |
-|XXXX            XXXX            XXXX            XXXX            XXXX            XXXX            XXXX            XXXX            |
-|X              XX              XX              XX              XX              XX              XX              XX              X|
-|X   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    X|
-|X ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`           X|
+|X   ,``  `,    XXXXXXXXXXXXXXXXXX   XXXXXXXXXXXXXXXXX````X  X  XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    X|
+|X ,`           XX ,`           XX  `           XX ,`     X  X  XX ,`           XX ,`                                           X|
+|XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXX  XXX,XXXXXXXXXXXXXXX,XXX  XJJXXXXXXX,XXXXXXXXXXXXXXX,X                             XXXXXXXXXXX|
+|` ```           ` ```           `               ` ```    X  X   ` ```           ` ```                                XXXXXXXXXXX|
+|        `               `        jj    ``               `X  X           `     XXX           ,,,XX                    XXXXXXXXXXX|
+|XXXX       ,    XXXX       ,    XXXX       ,    XXXX     X  X   XXXX       ,  XXXXXX  M                              XXXXXXXXXXX|
+|XXXX            XXXX            XXXX            XXXX     X  X   XXXX    XXXXXXXXXXXX  X           XXX                XXXXXXXXXXX|
+|X              XX              XX              XX        X  X  XX       XXXXXXXXXXX`  X                              XXXXXXXXXXX|
+|X   ,``  `,    XX   ,``  `,    XX   ,`               ``  X  X  XX   ,`` XXXXXXXXXX   jX       XXX                    XXXXXXXXXXX|
+|X ,`           XX ,`           XX ,`                     X  X  XX ,`    XXXXXXXXXX  XXX                              XXXXXXXXXXX|
+|XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXX,                 X,XXX  X XXXXXXXX,XXXXXXXXXXX    X    XXX                       XXXXXXXXXXX|
+|` ```           ` ```           XXX`            ` ```    X  X   ` ```   XXXXXXXXXXXX  X                              XXXXXXXXXXX|
+|        `               `       XXXXLl                   X  X           XXXXXXXXXX    X  XXX                         XXXXXXXXXXX|
+|XXXX       ,    XXXX       ,    XXXXXXLl                 X  X     G            `X  ,XXX                          i s XXXXXXXXXXX|
+|XXXX            XXXX            XXXXXXXXLl                      XXXX    XXXXXX     XXXX XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|
+|X              XX              XX   XXXXXXLl                   XX       XXXXXXXXXX XXXX XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|
+|X   ,``  `,    XX   ,``  `,    XX   XXXXXXXXXLl          jjj   XX   ,`` XXXXXXXXX  XXXX XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|
+|X ,`           XX ,`           XX ,`XXXXXXXXXXXXXXl            XX ,`    XXXXXXXXX XXXXX XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|
+|XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXX XXXXX XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|
+|` ```           ` ```           ` ```           ` ```           ` ```   XXXXXX  ` XXXXX XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|
+|        `               `               `               `               `               XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|
+|XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX       ,    XXXX    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|
+|XXXX            XXXX            XXXX            XXXX            XXXX            XXXX    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|
+|X              XX              XX              XX              XX              XX       XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|
+|X   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,``  `,    XX   ,`` XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|
+|X ,`           XX ,`           XX ,`           XX ,`           XX ,`           XX ,`    XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX|
 |XXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXXXXXXXX,XXXXXXXXX|
 ",
 });
