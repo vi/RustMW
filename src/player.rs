@@ -227,7 +227,7 @@ impl Player {
         }
 
         let mut radius = 3.0;
-        if self.status.is_touched(crate::UniqueItem::SmallSize) {
+        if self.status.is_touched(crate::UniqueItem::FeatureSmallSize) {
             radius = 1.5;
         }
         let feather = 3.0;
@@ -349,7 +349,7 @@ impl Player {
     pub fn draw(&self, _global_frame: u8, keys: u8, cam: &Camera) {
         draw_colours(3, 0, 0, 0);
         let onscreen = self.pos - cam.pos + cf32::new(0.5, 0.5) * SCREEN_SIZE as f32;
-        if self.status.is_touched(crate::UniqueItem::SmallSize) {
+        if self.status.is_touched(crate::UniqueItem::FeatureSmallSize) {
             if self.anim_timer.0 & 0x1F < 16 {
                 blit(&sprites::WHEEL_S, onscreen.re as i32 - 4, onscreen.im as i32 - 4, 8, 8, BLIT_1BPP);
             } else {

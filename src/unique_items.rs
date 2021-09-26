@@ -1,16 +1,51 @@
-use crate::{LEVEL, TilePos, camera::Camera, cf32, sprites::{INFOBOX1, INFOBOX2, STAR1, STAR2}, utils::draw_colours, wasm4::{SCREEN_SIZE, blit, rect, text}, world::World};
+use crate::{LEVEL, TilePos, camera::Camera, cf32, sprites::{CRATE, INFOBOX1, INFOBOX2, STAR1, STAR2}, utils::draw_colours, wasm4::{SCREEN_SIZE, blit, rect, text}, world::World};
 
 
 #[derive(variant_count::VariantCount, PartialEq, Eq, Copy, Clone, enum_iterator::IntoEnumIterator)]
 pub enum UniqueItem {
     PlayerStart,
-    Info1,
-    SmallSize,
+    InfoWelcome,
+    FeatureSmallSize,
+    CrateLog,
+}
+
+pub enum UniqueItemType {
+    Other,
+    Infobox,
+    Feature,
+    Crate,
 }
 
 impl UniqueItem {
-    pub fn get_pos(self) -> TilePos {
+    pub const fn get_pos(self) -> TilePos {
         LEVEL.unique_item_pos(self)
+    }
+
+    pub const fn visible(self) -> bool {
+        match self.r#type() {
+            UniqueItemType::Other => false,
+            UniqueItemType::Infobox => true,
+            UniqueItemType::Feature => true,
+            UniqueItemType::Crate => true,
+        }
+    }
+
+    pub const fn r#type(self) -> UniqueItemType {
+        match self as usize {
+            x if x >= UniqueItem::InfoWelcome as usize && x < UniqueItem::FeatureSmallSize as usize => UniqueItemType::Infobox,
+            x if x >= UniqueItem::FeatureSmallSize as usize && x < UniqueItem::CrateLog as usize => UniqueItemType::Feature,
+            x if x >= UniqueItem::CrateLog as usize => UniqueItemType::Crate,
+            _ => UniqueItemType::Other,
+        }
+    }
+
+    pub const fn text(self) -> &'static str {
+        use UniqueItem::*;
+        match self {
+            InfoWelcome => "Welcome to\nRustMW",
+            CrateLog => "log",
+            _ => "",
+        }
     }
 }
 
@@ -72,22 +107,41 @@ pub fn draw_unique(item: UniqueItem, frame: u8, player_pos: TilePos, cam: &Camer
         draw_colours(3,0,0,0);
     }
 
-    use UniqueItem::*;
-    match (item, touched, touched_now, blinker) {
-        (Info1, _, false, false) => blit(&INFOBOX1, x-4, y-4, 8, 8, 0),
-        (Info1, _, false, true) => blit(&INFOBOX2, x-4, y-4, 8, 8, 0),
-        (Info1, _, true, _) => {
-            *inhibit_drawing_player = true;
-            draw_colours(2, 0,0,0);
-            rect(10, 10, SCREEN_SIZE-20, SCREEN_SIZE-20);
-            draw_colours(1, 0,0,0);
-            rect(11, 11, SCREEN_SIZE-22, SCREEN_SIZE-22);
+    let r#type = item.r#type();
 
-            draw_colours(3, 0, 0, 0);
-            text("Welcome to\nRustMW", 14, 14);
-        }
-        (SmallSize, _, _, false) => blit(&STAR1, x-4, y-4, 8, 8, 0),
-        (SmallSize, _, _, true) => blit(&STAR2, x-4, y-4, 8, 8, 0),
+    if matches!(r#type, Infobox) && touched_now {
+        *inhibit_drawing_player = true;
+        draw_colours(2, 0,0,0);
+        rect(10, 10, SCREEN_SIZE-20, SCREEN_SIZE-20);
+        draw_colours(1, 0,0,0);
+        rect(11, 11, SCREEN_SIZE-22, SCREEN_SIZE-22);
+
+        draw_colours(3, 0, 0, 0);
+        text(item.text(), 14, 14);
+    }
+
+
+    if matches!(r#type, Crate) && touched_now {
+        draw_colours(2, 0,0,0);
+        rect(60, 6, 94, 16);
+        draw_colours(1, 0,0,0);
+        rect(61, 7, 92, 14);
+
+        draw_colours(3, 0, 0, 0);
+        text(item.text(), 63, 10);
+    }
+
+    if *inhibit_drawing_player {
+        return;
+    }
+
+    use UniqueItemType::*;
+    match (r#type, touched, blinker) {
+        (Infobox, _, false) => blit(&INFOBOX1, x-4, y-4, 8, 8, 0),
+        (Infobox, _, true) => blit(&INFOBOX2, x-4, y-4, 8, 8, 0),
+        (Feature, _, false) => blit(&STAR1, x-4, y-4, 8, 8, 0),
+        (Feature, _, true) => blit(&STAR2, x-4, y-4, 8, 8, 0),
+        (Crate,   _, _) => blit(&CRATE, x-4, y-4, 8, 8, 0),
         _ => (),
     }
 }

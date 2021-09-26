@@ -152,3 +152,16 @@ pub static STAR2: [u8; 8] = sprite8x8(
     |    X . . . .  |
 ",
 );
+
+pub static CRATE: [u8; 8] = sprite8x8(
+    b"
+    |. . X X X X X X|
+    |. X         X X|
+    |X X X X X X   X|
+    |X         X   X|
+    |X         X   X|
+    |X         X   X|
+    |X         X X .|
+    |X X X X X X .  |
+",
+);

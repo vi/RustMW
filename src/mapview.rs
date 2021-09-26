@@ -64,9 +64,11 @@ impl MapViewer {
         }
 
         for item in UniqueItem::into_enum_iter() {
-            let itempos = item.get_pos();
-            if game.player.status.is_touched(item) || self.blinker < 30 {
-                self.set_pixel(itempos, 0b11);
+            if item.visible() {
+                let itempos = item.get_pos();
+                if game.player.status.is_touched(item) || self.blinker < 30 {
+                    self.set_pixel(itempos, 0b11);
+                }
             }
         }
 
